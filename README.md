@@ -8,6 +8,80 @@ Changes to the configuration are governed by a **spec-based development workflow
 
 ---
 
+## Quick Deploy
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                                                                  │
+│   Boot Ubuntu Desktop ISO                                        │
+│   Press  e  to edit the GRUB entry                               │
+│   Find the line starting with  linux                             │
+│   Append to the end of that line:                                │
+│                                                                  │
+│   autoinstall cloud-config-url=https://tinyurl.com/YOUR-ALIAS   │
+│                                                                  │
+│   Press  F10  to boot                                            │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+> [!NOTE]
+> Replace `YOUR-ALIAS` with your custom TinyURL alias (see setup below). The installer fetches the config from that URL, pauses for **network** and **identity**, then runs completely unattended until reboot.
+
+---
+
+### One-time URL setup
+
+The short URL points to the raw `user-data` file in this repository. Create it once on [tinyurl.com](https://tinyurl.com) — it never expires:
+
+| Step | Action |
+|------|--------|
+| 1 | Go to **[tinyurl.com](https://tinyurl.com)** |
+| 2 | Paste the long URL: `https://raw.githubusercontent.com/jvanheerikhuize/Autoinstall-YAML/main/user-data` |
+| 3 | Set a custom alias (e.g. `jvh-autoinstall`) |
+| 4 | Click **Make TinyURL** |
+| 5 | Replace `YOUR-ALIAS` above with your alias and commit |
+
+> [!TIP]
+> TinyURL custom links are free, require no account, and never expire. Use something memorable — you'll type or paste this at the boot prompt.
+
+---
+
+### What happens after you boot
+
+```
+  Boot ISO + kernel parameter
+           │
+           ▼
+  Installer fetches user-data
+  from your TinyURL → GitHub raw
+           │
+     ┌─────▼─────┐    ┌─────────────────┐
+     │  Network  │    │    Identity      │
+     │ (you act) │    │ hostname + user  │
+     │           │    │   (you act)      │
+     └─────┬─────┘    └────────┬────────┘
+           └──────────────────┘
+                    │
+                    ▼
+         ┌──────────────────────┐
+         │  Fully automated:    │
+         │  · minimal desktop   │
+         │  · LVM storage       │
+         │  · dev packages      │
+         │  · VS Code snap      │
+         │  · UFW firewall      │
+         │  · drivers + codecs  │
+         │  · all updates       │
+         └──────────┬───────────┘
+                    │
+                    ▼
+           Reboot → log in
+
+```
+
+---
+
 ## How It Works
 
 ```
@@ -31,6 +105,8 @@ Machine reboots  →  Ready to log in
 
 ```
 ├── Autoinstall.yaml                # Active configuration (implements FEAT-0001 + FEAT-0004)
+├── user-data                       # GitHub Pages: served at jvanheerikhuize.github.io/Autoinstall-YAML/
+├── meta-data                       # GitHub Pages: required by nocloud-net datasource (static)
 │
 ├── specs/
 │   ├── features/

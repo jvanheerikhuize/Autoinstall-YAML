@@ -1,0 +1,102 @@
+autoinstall:
+  version: 1
+
+  # AC-013: Update the installer itself before proceeding
+  refresh-installer:
+    update: true
+    channel: stable/ubuntu-$REL
+
+  # AC-014: Auto-install OEM kernel if recommended for this hardware
+  oem:
+    install: auto
+
+  # FEAT-0004 AC-001–AC-003: Locale, keyboard, timezone — automated, no prompts
+  locale: en_US.UTF-8
+  keyboard:
+    layout: us
+    variant: ''
+  timezone: Europe/Amsterdam
+
+  # AC-002, AC-003: Only these two steps require user input — everything else is automated
+  interactive-sections:
+    - network
+    - identity
+
+  # AC-001: Lean desktop base — no bloatware, add only what is needed
+  source:
+    id: ubuntu-desktop-minimal
+
+  # AC-006: LVM disk layout
+  storage:
+    layout:
+      name: lvm
+
+  # AC-007: Developer base packages
+  # AC-016–AC-020: Dell Latitude 5400 hardware support
+  packages:
+    # Developer base (AC-007)
+    - git
+    - curl
+    - wget
+    - build-essential
+    - ca-certificates
+    - gnupg
+    - gufw
+    # Intel CPU microcode — security and stability for 8th Gen Whiskey Lake (AC-016)
+    - intel-microcode
+    # Intel thermal daemon — prevents throttling on Dell Latitude 5400 (AC-017)
+    - thermald
+    # ALSA UCM configs — correct audio profiles for the ALC256 codec (AC-018)
+    # Note: SOF firmware is bundled in linux-firmware (included with ubuntu-desktop-minimal)
+    - alsa-ucm-conf
+    # Thunderbolt 3 device manager (AC-019)
+    - bolt
+    # Signed firmware updates via Dell LVFS — BIOS, EC, dock firmware (AC-020)
+    - fwupd-signed
+    # Node.js runtime and npm — Ubuntu 24.04 ships Node 18 LTS (AC-021)
+    - nodejs
+    - npm
+
+  # AC-008: Developer and security snap packages
+  snaps:
+    - name: code
+      channel: stable
+    - name: prompting-client
+      channel: stable
+    - name: desktop-security-center
+      channel: stable
+
+  # AC-012 (pre-seed): Ensure UFW is enabled after installation
+  debconf-selections: |
+    ufw ufw/enable boolean true
+
+  # AC-009: Install third-party drivers (GPU, Wi-Fi, etc.)
+  drivers:
+    install: true
+
+  # AC-010: Install restricted media codecs
+  codecs:
+    install: true
+
+  # AC-005: Always use the official Ubuntu archive; disable GeoIP mirror selection
+  apt:
+    mirror-selection:
+      primary:
+        - uri: "http://archive.ubuntu.com/ubuntu"
+          arches: [amd64, i386]
+        - uri: "http://ports.ubuntu.com/ubuntu-ports"
+          arches: [s390x, arm64, armhf, powerpc, ppc64el, riscv64]
+    fallback: abort
+    geoip: false
+
+  # AC-011: Apply all security and general updates before first boot
+  updates: all
+
+  # AC-012: Enable UFW firewall with default-deny inbound policy
+  # FEAT-0007: Dotfiles provisioning — replace GITHUB_USER/DOTFILES_REPO and uncomment when repo is ready
+  late-commands:
+    - curtin in-target -- ufw --force enable
+    # - curtin in-target -- sh -c "U=$(awk -F: '$3>=1000 && $3<65534 {print $1; exit}' /etc/passwd) && su - $U -c 'git clone https://github.com/GITHUB_USER/DOTFILES_REPO.git ~/.dotfiles && ~/.dotfiles/install.sh' || true"
+
+  # AC-015: Reboot after installation completes
+  shutdown: reboot
