@@ -1,352 +1,250 @@
 # System Architecture
 
-> **For AI Assistants**: This document defines HOW the system is built. For WHAT it does, see `../specs/SPEC.md`. For WHY decisions were made, see `../decisions/`.
+> **For AI Assistants**: This document defines HOW the autoinstall system is structured. For WHAT it does, see `../specs/SPEC.md`. For WHY decisions were made, see `../decisions/`.
 
 ## Document Info
 
 | Field | Value |
 |-------|-------|
 | Version | 1.0.0 |
-| Status | Draft |
-| Last Updated | YYYY-MM-DD |
-| Owner | [Team/Person] |
+| Status | Active |
+| Last Updated | 2026-02-24 |
+| Owner | Jerry van Heerikhuize |
 
 ---
 
 ## 1. Architecture Overview
 
 ### 1.1 System Context
-<!-- Highest level view: the system and its environment -->
+
+This is a **configuration-driven** project, not an application. The "system" is the Ubuntu Autoinstall pipeline: a YAML file consumed by the subiquity installer to provision a machine without manual intervention.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     External Systems                         │
-├─────────────────────────────────────────────────────────────┤
-│  [Identity Provider]    [Payment Service]    [Email Service] │
-└──────────┬─────────────────────┬─────────────────┬──────────┘
-           │                     │                 │
-           ▼                     ▼                 ▼
+│                     Operator / Engineer                      │
+│            (provides ISO + autoinstall YAML)                │
+└──────────────────────────┬──────────────────────────────────┘
+                           │  boot + autoinstall YAML
+                           ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                    [SYSTEM NAME]                             │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐         │
-│  │   Web App   │  │   API       │  │   Workers   │         │
-│  └─────────────┘  └─────────────┘  └─────────────┘         │
-│                          │                                   │
-│                    ┌─────┴─────┐                            │
-│                    │ Database  │                            │
-│                    └───────────┘                            │
-└─────────────────────────────────────────────────────────────┘
-           ▲                     ▲                 ▲
-           │                     │                 │
-┌──────────┴─────────────────────┴─────────────────┴──────────┐
-│  [Web Users]           [Mobile Users]        [API Clients]   │
+│                  Ubuntu Subiquity Installer                  │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐  │
+│  │  autoinstall │  │   storage    │  │  late-commands   │  │
+│  │  YAML parser │  │  (curtin)    │  │  (curtin chroot) │  │
+│  └──────────────┘  └──────────────┘  └──────────────────┘  │
+└──────────────────────────┬──────────────────────────────────┘
+                           │  writes to disk
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  Installed Ubuntu System                     │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐  │
+│  │   GNOME      │  │  Developer   │  │  Security        │  │
+│  │   Desktop    │  │  Tools       │  │  (UFW, drivers)  │  │
+│  └──────────────┘  └──────────────┘  └──────────────────┘  │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 ### 1.2 Architecture Style
-<!-- What architectural pattern(s) does this system follow? -->
 
 | Aspect | Choice | Rationale |
 |--------|--------|-----------|
-| Overall Style | [Monolith / Microservices / Serverless / Hybrid] | [Why] |
-| API Style | [REST / GraphQL / gRPC] | [Why] |
-| Data Architecture | [Single DB / Polyglot / Event Sourced] | [Why] |
-| Deployment | [Containers / Serverless / VMs] | [Why] |
+| Overall style | Declarative configuration | Subiquity processes YAML; no imperative code except late-commands |
+| Interactivity | Mostly automated | Network and identity are interactive; all else is automated |
+| Storage | LVM | Flexible partition resizing post-install; industry standard for managed workstations |
+| Post-install | curtin in-target | Chroot-safe execution, no network dependency after packages are staged |
 
 ---
 
-## 2. Component Architecture
+## 2. Autoinstall YAML Structure
 
-### 2.1 Component Diagram
-<!-- Main components and their relationships -->
+### 2.1 Section Map
+
+The `Autoinstall.yaml` file is organized into the sections below. Sections marked **interactive** pause the installer for user input.
+
+```
+autoinstall:
+  version: 1                   # Always 1 for current subiquity
+  │
+  ├── refresh-installer         # Self-update before proceeding
+  ├── oem                       # OEM kernel auto-detection
+  ├── interactive-sections      # [network, identity] — pauses for user
+  ├── source                    # ubuntu-desktop-minimal
+  ├── storage                   # LVM layout
+  ├── identity                  # hostname/user (interactive, values left blank)
+  ├── packages                  # APT packages
+  ├── snaps                     # Snap packages
+  ├── debconf-selections        # Pre-seed debconf (e.g. UFW enable)
+  ├── drivers                   # Third-party drivers
+  ├── codecs                    # Restricted media codecs
+  ├── apt                       # Mirror config, GeoIP off
+  ├── updates                   # all (security + general)
+  ├── late-commands             # Post-install chroot commands
+  └── shutdown                  # poweroff after install
+```
+
+### 2.2 Section Descriptions
+
+| Section | Purpose | Automated? |
+|---------|---------|-----------|
+| `version` | Declares subiquity config version | Yes |
+| `refresh-installer` | Updates installer from `stable/ubuntu-$REL` channel | Yes |
+| `oem` | Auto-installs OEM kernel if hardware recommends it | Yes |
+| `interactive-sections` | Lists sections that pause for user input | — |
+| `source` | Selects `ubuntu-desktop-minimal` as installation source | Yes |
+| `storage` | Configures LVM disk layout | Yes |
+| `identity` | Hostname, username, password — left blank for interactive fill | Interactive |
+| `network` | Network interface configuration | Interactive |
+| `packages` | APT packages installed during setup | Yes |
+| `snaps` | Snap packages installed during setup | Yes |
+| `debconf-selections` | Pre-seeds debconf answers (e.g. UFW enable) | Yes |
+| `drivers` | Enables third-party driver installation | Yes |
+| `codecs` | Enables restricted media codec installation | Yes |
+| `apt` | Configures APT mirror; disables GeoIP | Yes |
+| `updates` | Applies security + general updates pre-boot | Yes |
+| `late-commands` | Runs arbitrary commands in the chroot after install | Yes |
+| `shutdown` | Powers off the machine after installation completes | Yes |
+
+---
+
+## 3. Software Architecture
+
+### 3.1 Package Strategy
+
+Packages are divided into three tiers:
+
+| Tier | Mechanism | Examples | When installed |
+|------|-----------|---------|----------------|
+| Base OS | `source: ubuntu-desktop-minimal` | GNOME, systemd, NetworkManager | During partitioning phase |
+| APT packages | `packages:` section | git, curl, build-essential, gufw | Package installation phase |
+| Snap packages | `snaps:` section | VS Code, prompting-client, desktop-security-center | Snap installation phase |
+| Post-install | `late-commands:` | (extensible — future specs) | After base system is written |
+
+### 3.2 Security Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                      Presentation Layer                      │
+│                      UFW Firewall                           │
+│  Default policy: deny inbound / allow outbound              │
+│  Enabled via: debconf-selections + late-commands            │
 ├─────────────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐         │
-│  │  Web UI     │  │  Mobile App │  │  Admin UI   │         │
-│  │  (React)    │  │  (Native)   │  │  (React)    │         │
-│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘         │
-└─────────┼────────────────┼────────────────┼─────────────────┘
-          │                │                │
-          ▼                ▼                ▼
-┌─────────────────────────────────────────────────────────────┐
-│                       API Gateway                            │
-│  [Authentication] [Rate Limiting] [Routing] [Logging]       │
-└────────────────────────────┬────────────────────────────────┘
-                             │
-          ┌──────────────────┼──────────────────┐
-          ▼                  ▼                  ▼
-┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐
-│  User Service   │ │  Core Service   │ │ Notification    │
-│                 │ │                 │ │    Service      │
-│ - Auth          │ │ - Business      │ │ - Email         │
-│ - Profile       │ │   Logic         │ │ - Push          │
-│ - Preferences   │ │ - Workflows     │ │ - SMS           │
-└────────┬────────┘ └────────┬────────┘ └────────┬────────┘
-         │                   │                   │
-         ▼                   ▼                   ▼
-┌─────────────────────────────────────────────────────────────┐
-│                       Data Layer                             │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐         │
-│  │  PostgreSQL │  │   Redis     │  │  S3/Blob    │         │
-│  │  (Primary)  │  │  (Cache)    │  │  (Files)    │         │
-│  └─────────────┘  └─────────────┘  └─────────────┘         │
+│                  Third-Party Drivers                        │
+│  install: true (GPU, Wi-Fi, etc.)                           │
+├─────────────────────────────────────────────────────────────┤
+│                   No Embedded Secrets                       │
+│  identity section left blank — filled interactively        │
+├─────────────────────────────────────────────────────────────┤
+│                   APT Mirror Integrity                      │
+│  fallback: abort — never install from unknown mirrors       │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### 2.2 Component Descriptions
+### 3.3 APT Mirror Architecture
 
-| Component | Purpose | Technology | Owner |
-|-----------|---------|------------|-------|
-| Web UI | User-facing web application | React, TypeScript | Frontend Team |
-| API Gateway | Request routing, auth, rate limiting | [Kong/Nginx/Custom] | Platform Team |
-| User Service | Authentication, authorization, profiles | [Language/Framework] | Backend Team |
-| Core Service | Primary business logic | [Language/Framework] | Backend Team |
-| Notification Service | Multi-channel notifications | [Language/Framework] | Backend Team |
+```
+Primary (amd64, i386):
+  http://archive.ubuntu.com/ubuntu
+
+ARM / other arches:
+  http://ports.ubuntu.com/ubuntu-ports
+
+GeoIP:         disabled (geoip: false)
+Fallback:      abort
+```
+
+Rationale: GeoIP is disabled to ensure deterministic mirror selection across different network environments (corporate offices, home, VPN). The canonical archive is always used.
 
 ---
 
-## 3. Data Architecture
+## 4. Interactive vs. Automated Sections
 
-### 3.1 Data Model Overview
-<!-- Key entities and relationships -->
+### 4.1 Interactive (user must act)
 
-```
-┌──────────────┐       ┌──────────────┐       ┌──────────────┐
-│    User      │───────│   Account    │───────│   Resource   │
-├──────────────┤  1:N  ├──────────────┤  1:N  ├──────────────┤
-│ id           │       │ id           │       │ id           │
-│ email        │       │ user_id      │       │ account_id   │
-│ created_at   │       │ name         │       │ type         │
-└──────────────┘       │ plan         │       │ data         │
-                       └──────────────┘       └──────────────┘
-```
+| Section | Why interactive |
+|---------|----------------|
+| `network` | Each machine has a different network environment (DHCP, static, VPN, proxy) |
+| `identity` | Each machine needs a unique hostname and user credentials — hardcoding is a security risk |
 
-### 3.2 Data Storage Strategy
+### 4.2 Automated (no user action)
 
-| Data Type | Storage | Rationale |
-|-----------|---------|-----------|
-| Transactional | PostgreSQL | ACID compliance, complex queries |
-| Cache | Redis | Low latency, session data |
-| Files/Media | S3/Blob | Scalable object storage |
-| Search | Elasticsearch | Full-text search capabilities |
-| Analytics | [ClickHouse/BigQuery] | Time-series, aggregations |
-
-### 3.3 Data Flow
-<!-- How data moves through the system -->
-
-```
-[User Input] → [API Gateway] → [Validation] → [Business Logic] → [Database]
-                                                      │
-                                                      ▼
-                                              [Event Published]
-                                                      │
-                                    ┌─────────────────┼─────────────────┐
-                                    ▼                 ▼                 ▼
-                              [Analytics]      [Notifications]    [Webhooks]
-```
+All other sections are fully automated. The machine can be left unattended from the moment the network and identity steps are confirmed.
 
 ---
 
-## 4. Integration Architecture
+## 5. Late Commands Architecture
 
-### 4.1 External Integrations
+Late commands run via `curtin in-target -- <command>` which executes in a chroot of the installed system. This ensures:
+- Commands run against the target system, not the live installer environment
+- APT, systemctl, and other system tools operate on the installed OS
+- Network is available during late-commands if needed
 
-| System | Purpose | Protocol | Auth | Status |
-|--------|---------|----------|------|--------|
-| [Auth0/Okta] | Identity | OAuth 2.0 | API Key | Active |
-| [Stripe] | Payments | REST | Secret Key | Active |
-| [SendGrid] | Email | REST | API Key | Active |
-| [Twilio] | SMS | REST | API Key | Planned |
-
-### 4.2 API Contracts
-<!-- Where to find API specifications -->
-
-- **Internal APIs**: `specs/api/` (OpenAPI 3.1)
-- **External Webhooks**: `specs/webhooks/`
-- **Event Schemas**: `specs/events/`
-
-### 4.3 Event Architecture
-<!-- If using events/messaging -->
-
-| Event | Publisher | Subscribers | Schema |
-|-------|-----------|-------------|--------|
-| `user.created` | User Service | Notification, Analytics | `events/user.json` |
-| `order.completed` | Core Service | Notification, Billing | `events/order.json` |
+Current late-commands scope is defined per spec. Future specs may extend this section.
 
 ---
 
-## 5. Infrastructure Architecture
-
-### 5.1 Deployment Diagram
+## 6. Lifecycle
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                        Cloud Provider                        │
-├─────────────────────────────────────────────────────────────┤
-│  Region: [us-east-1]                                        │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │  VPC: Production                                     │   │
-│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐ │   │
-│  │  │ Public      │  │ Private     │  │ Data        │ │   │
-│  │  │ Subnet      │  │ Subnet      │  │ Subnet      │ │   │
-│  │  │             │  │             │  │             │ │   │
-│  │  │ [ALB]       │  │ [ECS/K8s]   │  │ [RDS]       │ │   │
-│  │  │ [NAT]       │  │ [Workers]   │  │ [ElastiCache│ │   │
-│  │  └─────────────┘  └─────────────┘  └─────────────┘ │   │
-│  └─────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### 5.2 Environment Strategy
-
-| Environment | Purpose | Data | Access |
-|-------------|---------|------|--------|
-| Development | Local development | Synthetic | Developers |
-| Staging | Integration testing | Sanitized copy | Team |
-| Production | Live system | Real | Restricted |
-
-### 5.3 Scaling Strategy
-
-| Component | Scaling Type | Trigger | Limits |
-|-----------|--------------|---------|--------|
-| API Servers | Horizontal | CPU > 70% | 2-20 instances |
-| Workers | Horizontal | Queue depth > 100 | 1-10 instances |
-| Database | Vertical + Read Replicas | Manual | [Size limits] |
-
----
-
-## 6. Security Architecture
-
-### 6.1 Security Layers
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                      WAF / DDoS Protection                   │
-├─────────────────────────────────────────────────────────────┤
-│                      API Gateway (Auth)                      │
-├─────────────────────────────────────────────────────────────┤
-│                   Application Security                       │
-│  [Input Validation] [Output Encoding] [CSRF] [Rate Limiting]│
-├─────────────────────────────────────────────────────────────┤
-│                      Data Security                           │
-│  [Encryption at Rest] [Encryption in Transit] [Key Mgmt]    │
-├─────────────────────────────────────────────────────────────┤
-│                   Infrastructure Security                    │
-│  [Network Isolation] [IAM] [Secrets Management] [Logging]   │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### 6.2 Authentication & Authorization
-
-| Aspect | Implementation |
-|--------|----------------|
-| User Auth | OAuth 2.0 / OIDC via [Provider] |
-| Service Auth | mTLS / API Keys |
-| Authorization | RBAC with [permissions model] |
-| Session | JWT with [expiry] refresh tokens |
-
-### 6.3 Data Classification
-
-| Classification | Examples | Controls |
-|----------------|----------|----------|
-| Public | Marketing content | None |
-| Internal | Business metrics | Auth required |
-| Confidential | User PII | Encryption, audit logs |
-| Restricted | Payment data | Encryption, PCI compliance |
-
----
-
-## 7. Observability
-
-### 7.1 Monitoring Stack
-
-| Capability | Tool | Purpose |
-|------------|------|---------|
-| Metrics | [Prometheus/CloudWatch] | System and business metrics |
-| Logging | [ELK/CloudWatch Logs] | Centralized log aggregation |
-| Tracing | [Jaeger/X-Ray] | Distributed tracing |
-| Alerting | [PagerDuty/OpsGenie] | Incident notification |
-
-### 7.2 Key Metrics
-
-| Metric | Target | Alert Threshold |
-|--------|--------|-----------------|
-| API Latency (P95) | < 200ms | > 500ms |
-| Error Rate | < 0.1% | > 1% |
-| Availability | 99.9% | < 99.5% |
-| CPU Utilization | < 70% | > 85% |
-
-### 7.3 Logging Standards
-
-```json
-{
-  "timestamp": "ISO8601",
-  "level": "INFO|WARN|ERROR",
-  "service": "service-name",
-  "trace_id": "uuid",
-  "message": "Human readable message",
-  "context": { "user_id": "...", "request_id": "..." }
-}
+[Spec drafted] → [Spec reviewed] → [Spec approved]
+                                          │
+                                          ▼
+                               [Autoinstall.yaml created]
+                                          │
+                                          ▼
+                               [Tested in VM]
+                                          │
+                                     ┌────┴────┐
+                                     │  Pass?  │
+                                     └────┬────┘
+                               Yes ───────┘───── No → Fix YAML
+                                          │
+                                          ▼
+                               [Merged to main]
+                                          │
+                                          ▼
+                               [Used to provision machines]
 ```
 
 ---
 
-## 8. Development Standards
+## 7. Development Standards
 
-### 8.1 Code Organization
+### 7.1 YAML Conventions
 
-```
-src/
-├── api/              # API route handlers
-├── services/         # Business logic
-├── models/           # Data models
-├── repositories/     # Data access
-├── utils/            # Shared utilities
-├── config/           # Configuration
-└── tests/            # Test files
-```
+See [PATTERNS.md](PATTERNS.md) for detailed YAML style guidelines. Key rules:
 
-### 8.2 Key Patterns
+- 2-space indentation throughout
+- Single quotes for string values where quoting is needed
+- Comments above each top-level section explaining intent
+- No trailing whitespace
 
-| Pattern | Usage | Example |
-|---------|-------|---------|
-| Repository | Data access abstraction | `UserRepository.findById()` |
-| Service | Business logic encapsulation | `AuthService.authenticate()` |
-| Factory | Object creation | `NotificationFactory.create()` |
-| Strategy | Algorithm selection | `PaymentStrategy` |
-
-### 8.3 Cross-Cutting Concerns
+### 7.2 Cross-Cutting Concerns
 
 | Concern | Implementation |
 |---------|----------------|
-| Error Handling | [Pattern - e.g., Result types, exceptions] |
-| Validation | [Library/approach] |
-| Logging | [Library] with structured format |
-| Configuration | Environment variables + [config library] |
+| Secrets | Never in YAML — identity section left blank |
+| Idempotency | subiquity handles idempotency; late-commands should be idempotent where possible |
+| Error handling | `|| true` only for non-critical late-commands that may fail gracefully |
+| Logging | Installer logs at `/var/log/installer/` on the installed system |
 
 ---
 
-## 9. Appendix
+## 8. Appendix
 
-### A. Technology Radar
+### A. Technology Reference
 
-| Technology | Status | Notes |
-|------------|--------|-------|
-| [Tech 1] | Adopt | Production ready |
-| [Tech 2] | Trial | Evaluating |
-| [Tech 3] | Hold | Not recommended |
+| Technology | Version | Notes |
+|------------|---------|-------|
+| Ubuntu | 24.04 LTS (Noble) | Minimum supported version |
+| Subiquity | Bundled with ISO | Autoinstall v1 format |
+| Curtin | Bundled with subiquity | Storage and late-commands executor |
+| LVM | System default | Logical Volume Manager for storage |
 
 ### B. Architecture Decision Records
 
-See `../decisions/` for detailed ADRs:
-- ADR-001: [Decision title]
-- ADR-002: [Decision title]
+See `../decisions/` for detailed ADRs.
 
 ### C. Revision History
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
-| 1.0.0 | YYYY-MM-DD | [Name] | Initial version |
+| 1.0.0 | 2026-02-24 | Jerry van Heerikhuize | Initial version |

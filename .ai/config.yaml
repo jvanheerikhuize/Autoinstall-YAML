@@ -15,12 +15,11 @@
 version: "1.0"
 
 # Project identification
-# TODO: Update these values for your project
 project:
-  name: "Spec-Driven Development Template"  # Update with your project name
-  type: "template"  # application | library | cli | api | template
-  language: "agnostic"  # Primary language (this template is language-agnostic)
-  maturity: "production"  # development | production | maintenance
+  name: "Ubuntu Developer Workstation Autoinstall"
+  type: "configuration"  # application | library | cli | api | template | configuration
+  language: "yaml"  # Primary configuration language
+  maturity: "development"  # development | production | maintenance
 
 # Context loading configuration
 context:
@@ -103,20 +102,38 @@ behavior:
 # Domain-specific terminology
 # Helps AI understand your business domain
 domain:
-  # Define your ubiquitous language
+  # Ubiquitous language for the Ubuntu autoinstall domain
   terms:
-    # Example:
-    # - term: "Workspace"
-    #   definition: "A container for projects belonging to a team"
-    #   synonyms: ["Organization", "Team Space"]
-    []
+    - term: "Autoinstall"
+      definition: "Ubuntu's mechanism for fully or partially unattended installation using a YAML configuration file processed by subiquity"
+      synonyms: ["autoinstall YAML", "unattended install"]
+    - term: "Subiquity"
+      definition: "The Ubuntu installer backend that reads and processes the autoinstall YAML file"
+      synonyms: ["installer"]
+    - term: "Curtin"
+      definition: "The storage and command execution backend used by subiquity; used for late-commands via 'curtin in-target'"
+      synonyms: []
+    - term: "late-commands"
+      definition: "YAML section containing shell commands run inside a chroot of the installed system after base installation completes"
+      synonyms: ["post-install commands"]
+    - term: "interactive-sections"
+      definition: "YAML key listing section names where the installer pauses for user input instead of using automated values"
+      synonyms: []
+    - term: "LVM"
+      definition: "Logical Volume Manager — the disk partitioning scheme used for the storage layout"
+      synonyms: ["Logical Volume Manager"]
+    - term: "ubuntu-desktop-minimal"
+      definition: "The minimal Ubuntu Desktop installation source — a lean base without optional default apps"
+      synonyms: ["minimal desktop"]
 
-  # Business rules AI should respect
+  # Business rules AI must respect
   rules:
-    # Example:
-    # - "Users must have verified email before creating workspaces"
-    # - "Free tier limited to 3 projects"
-    []
+    - "Never hardcode credentials (passwords, tokens, keys) in any YAML file"
+    - "The identity section must always remain interactive — no default username or password"
+    - "Only implement what is covered by an approved spec (status: approved)"
+    - "All late-commands must use 'curtin in-target' for chroot execution"
+    - "Autoinstall.example.yaml is a reference file only — do not treat it as the active config"
+    - "APT mirror fallback must always be set to abort"
 
 # AI CLI Integration Settings
 # Configure which AI coding assistants are enabled and their preferences

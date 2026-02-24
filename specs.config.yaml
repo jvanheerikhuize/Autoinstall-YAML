@@ -49,18 +49,18 @@ settings:
 # Specification registry
 # Add specs here to track them centrally and enable batch processing
 specifications:
-  # Example entry (uncomment and modify):
-  # - id: "FEAT-0001"
-  #   file: "specs/features/FEAT-0001-user-authentication.yaml"
-  #   status: "approved"  # draft | review | approved | implemented | deprecated
-  #   auto_implement: true  # Set to true to include in scheduled processing
-  #   priority: "high"
-  #   assignee: "username"
-  #   target_version: "1.0.0"
-  #   notes: "Core authentication feature"
-  #   labels:
-  #     - "authentication"
-  #     - "security"
+  - id: "FEAT-0001"
+    file: "specs/features/FEAT-0001-ubuntu-developer-workstation.yaml"
+    status: "draft"  # draft | review | approved | implemented | deprecated
+    auto_implement: false
+    priority: "high"
+    assignee: "jerry"
+    target_version: "1.0.0"
+    notes: "Initial autoinstall configuration for Ubuntu developer workstations"
+    labels:
+      - "ubuntu"
+      - "autoinstall"
+      - "developer-workstation"
 
   # - id: "API-0001"
   #   file: "specs/api/users-api.openapi.yaml"

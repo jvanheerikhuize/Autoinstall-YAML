@@ -1,0 +1,202 @@
+# Feature Specification: Ubuntu Developer Workstation Autoinstall
+# Validate against: specs/schemas/feature-spec.schema.json
+
+metadata:
+  id: "FEAT-0001"
+  title: "Ubuntu Developer Workstation Autoinstall Configuration"
+  version: "1.0.0"
+  status: "draft"  # draft | review | approved | implemented | deprecated
+  priority: "high"
+  author: "jerry"
+  created_at: "2026-02-24"
+  updated_at: "2026-02-24"
+  tags:
+    - ubuntu
+    - autoinstall
+    - developer-workstation
+    - desktop
+
+description:
+  summary: |
+    An Ubuntu autoinstall YAML that provisions a developer workstation with Ubuntu
+    Desktop Minimal, mostly automated installation, sensible security defaults, and
+    a curated set of developer-oriented packages and tools.
+
+  problem_statement: |
+    Setting up a developer workstation manually is time-consuming and inconsistent.
+    Each new machine requires the same decisions to be made again: storage layout,
+    mirror selection, security baseline, package selection. Without a reproducible
+    autoinstall configuration:
+    - Machines diverge over time (configuration drift)
+    - Onboarding new developers is slow
+    - Security baselines are hard to enforce consistently
+    - Reinstalls are painful and error-prone
+
+  proposed_solution: |
+    An Ubuntu Autoinstall (subiquity) YAML file that:
+    - Uses ubuntu-desktop-minimal as the installation source for a lean base
+    - Automates storage, APT, locale, and software configuration
+    - Leaves network and identity as interactive sections so each machine gets
+      the correct hostname and credentials without hardcoding secrets
+    - Installs a curated set of developer tools and security software
+    - Enforces a security baseline (firewall enabled, third-party drivers,
+      full media codec support) out of the box
+    - Applies all available security and general updates before first boot
+
+  out_of_scope:
+    - "Corporate MDM / endpoint management enrollment (e.g. Intune, Jamf)"
+    - "IDE configuration or dotfile management (handled post-install)"
+    - "VPN or corporate proxy configuration"
+    - "Disk encryption (full-disk LUKS) — can be added in a follow-up spec"
+    - "Multi-disk or RAID storage layouts"
+    - "Server or headless deployments"
+
+  dependencies:
+    - "Ubuntu Desktop ISO (24.04 LTS or later) with subiquity installer"
+
+acceptance_criteria:
+  - id: "AC-001"
+    given: "An Ubuntu Desktop ISO is booted on a target machine"
+    when: "The autoinstall YAML is provided to the installer"
+    then: "The installer uses ubuntu-desktop-minimal as the installation source"
+    and:
+      - "No non-minimal desktop source variant is selected"
+
+  - id: "AC-002"
+    given: "The installer is running with the autoinstall YAML"
+    when: "The installation reaches the network configuration step"
+    then: "The installer pauses for interactive network configuration"
+    and:
+      - "The network section is listed under interactive-sections"
+
+  - id: "AC-003"
+    given: "The installer is running with the autoinstall YAML"
+    when: "The installation reaches the identity (user account) step"
+    then: "The installer pauses for interactive identity configuration"
+    and:
+      - "The identity section is listed under interactive-sections"
+      - "No credentials (username, password, hostname) are hardcoded in the YAML"
+
+  - id: "AC-004"
+    given: "The identity step is interactive"
+    when: "The installer completes the identity step"
+    then: "The resulting system has a non-root user account with sudo privileges"
+
+  - id: "AC-005"
+    given: "An amd64 machine is being installed"
+    when: "The APT mirror is configured"
+    then: "The primary APT mirror is set to http://archive.ubuntu.com/ubuntu"
+    and:
+      - "ARM and other architectures fall back to http://ports.ubuntu.com/ubuntu-ports"
+      - "GeoIP-based mirror selection is disabled (geoip: false)"
+      - "Mirror fallback behavior is set to abort on failure"
+
+  - id: "AC-006"
+    given: "The installation YAML is processed"
+    when: "The storage layout is applied"
+    then: "The disk is partitioned using LVM"
+    and:
+      - "The layout name is lvm"
+
+  - id: "AC-007"
+    given: "The installation completes"
+    when: "The package installation phase runs"
+    then: "The following packages are installed from the Ubuntu archive"
+    and:
+      - "git — version control"
+      - "curl — HTTP client utility"
+      - "wget — file download utility"
+      - "build-essential — C/C++ compiler toolchain"
+      - "ca-certificates — TLS certificate bundle"
+      - "gnupg — GPG keyring management"
+      - "gufw — graphical UFW firewall manager"
+
+  - id: "AC-008"
+    given: "The installation completes"
+    when: "Snap packages are installed"
+    then: "The following snaps are installed from the stable channel"
+    and:
+      - "code (Visual Studio Code)"
+      - "prompting-client"
+      - "desktop-security-center"
+
+  - id: "AC-009"
+    given: "The installation YAML is processed"
+    when: "The drivers section is evaluated"
+    then: "Third-party drivers (GPU, Wi-Fi, etc.) are installed automatically"
+
+  - id: "AC-010"
+    given: "The installation YAML is processed"
+    when: "The codecs section is evaluated"
+    then: "Restricted media codec support is installed"
+
+  - id: "AC-011"
+    given: "The installation YAML is processed"
+    when: "The updates section is evaluated"
+    then: "Both security and general updates are applied before first boot"
+    and:
+      - "The updates field is set to all"
+
+  - id: "AC-012"
+    given: "The installation completes"
+    when: "The late-commands phase runs"
+    then: "The UFW firewall is enabled with default-deny inbound policy"
+
+  - id: "AC-013"
+    given: "The installation YAML is processed"
+    when: "The refresh-installer section is evaluated"
+    then: "The installer updates itself before proceeding"
+    and:
+      - "The update field is set to true"
+      - "The channel is set to stable/ubuntu-$REL"
+
+  - id: "AC-014"
+    given: "The installation YAML is processed"
+    when: "The oem section is evaluated"
+    then: "An OEM kernel is installed automatically if recommended for the hardware"
+    and:
+      - "The install field is set to auto"
+
+  - id: "AC-015"
+    given: "The installation completes"
+    when: "The shutdown section is evaluated"
+    then: "The machine powers off after installation completes"
+    and:
+      - "The shutdown field is set to poweroff"
+
+technical_requirements:
+  constraints:
+    - "Must be valid Ubuntu Autoinstall (subiquity) YAML — version: 1"
+    - "Must not embed plaintext passwords or secrets"
+    - "Interactive sections must use the interactive-sections key"
+    - "late-commands must use curtin in-target for chroot execution"
+    - "Must be compatible with Ubuntu 24.04 LTS (Noble) and later releases"
+
+  security:
+    - "No credentials hardcoded in the YAML"
+    - "UFW firewall must be enabled by default after installation"
+    - "Third-party driver installation must be opt-in (install: true)"
+    - "APT fallback set to abort to prevent installing from untrusted mirrors"
+
+testing_requirements:
+  unit_tests: false
+  integration_tests: true
+  e2e_tests: true
+  performance_tests: false
+  test_scenarios:
+    - "Boot Ubuntu Desktop ISO with autoinstall YAML and verify installer reaches interactive network step"
+    - "Complete interactive identity step and verify user account is created with sudo"
+    - "Verify all specified packages are installed post-boot"
+    - "Verify all specified snaps are installed post-boot"
+    - "Verify UFW is active and enabled on the installed system"
+    - "Verify LVM layout is present on the installed disk"
+    - "Verify machine powers off (not reboots) after installation"
+    - "Verify no credentials are stored in the autoinstall YAML"
+
+rollout:
+  rollout_strategy: "immediate"
+  rollback_plan: |
+    If the autoinstall YAML causes installation failures:
+    1. Boot the ISO in manual (non-autoinstall) mode to complete setup manually
+    2. Review installer logs at /var/log/installer/ for root cause
+    3. Fix the offending YAML section and re-test in a VM before re-deploying
