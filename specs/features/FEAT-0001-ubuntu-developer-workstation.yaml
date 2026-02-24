@@ -184,10 +184,10 @@ acceptance_criteria:
   - id: "AC-018"
     given: "The target machine is a Dell Latitude 5400 with a Realtek ALC256 audio chipset"
     when: "The package installation phase runs"
-    then: "Sound Open Firmware and UCM audio configuration are installed"
+    then: "UCM audio configuration is installed for the ALC256 codec"
     and:
-      - "The sof-firmware package is present in the packages list"
       - "The alsa-ucm-conf package is present in the packages list"
+      - "SOF firmware is provided by linux-firmware (bundled with ubuntu-desktop-minimal — no separate package needed)"
 
   - id: "AC-019"
     given: "The target machine is a Dell Latitude 5400 with Thunderbolt 3"

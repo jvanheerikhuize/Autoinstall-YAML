@@ -12,7 +12,7 @@
 - **CPU**: Intel 8th Gen (Whiskey Lake) — Core i5-8265U / i7-8665U
 - **GPU**: Intel UHD Graphics 620 (i915 — in kernel)
 - **Wi-Fi**: Intel Wireless-AC 9560 (iwlwifi — in kernel, firmware via linux-firmware)
-- **Audio**: Realtek ALC256 — requires `sof-firmware` + `alsa-ucm-conf` for mic/speakers
+- **Audio**: Realtek ALC256 — requires `alsa-ucm-conf` for mic/speakers; SOF firmware is bundled in `linux-firmware` (no separate package — `sof-firmware` does not exist in Ubuntu)
 - **Fingerprint**: Broadcom BCM58200 — handled via OEM stack (`oem: install: auto`)
 - **Thunderbolt**: Thunderbolt 3 — managed by `bolt`
 - **Firmware updates**: Dell LVFS via `fwupd` + `fwupd-signed`

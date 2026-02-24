@@ -53,9 +53,8 @@ autoinstall:
     - intel-microcode
     # Intel thermal daemon — prevents throttling on Dell Latitude 5400 (AC-017)
     - thermald
-    # Sound Open Firmware — required for Realtek ALC256 mic and speakers (AC-018)
-    - sof-firmware
     # ALSA UCM configs — correct audio profiles for the ALC256 codec (AC-018)
+    # Note: SOF firmware is bundled in linux-firmware (included with ubuntu-desktop-minimal)
     - alsa-ucm-conf
     # Thunderbolt 3 device manager (AC-019)
     - bolt
