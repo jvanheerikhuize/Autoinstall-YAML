@@ -73,7 +73,7 @@ autoinstall:
   ├── interactive-sections      # [network, identity] — pauses for user
   ├── source                    # ubuntu-desktop-minimal
   ├── storage                   # LVM layout
-  ├── identity                  # hostname/user (interactive, values left blank)
+  # identity: block intentionally absent — subiquity must ask, no fallback values
   ├── packages                  # APT packages
   ├── snaps                     # Snap packages
   ├── debconf-selections        # Pre-seed debconf (e.g. UFW enable)
@@ -98,7 +98,7 @@ autoinstall:
 | `interactive-sections` | Lists sections that pause for user input | — |
 | `source` | Selects `ubuntu-desktop-minimal` as installation source | Yes |
 | `storage` | Configures LVM disk layout | Yes |
-| `identity` | Hostname, username, password — left blank for interactive fill | Interactive |
+| `identity` | Absent from YAML — subiquity must pause and collect hostname/username/password | Interactive |
 | `network` | Network interface configuration | Interactive |
 | `packages` | APT packages installed during setup | Yes |
 | `snaps` | Snap packages installed during setup | Yes |

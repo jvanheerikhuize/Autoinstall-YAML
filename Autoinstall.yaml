@@ -31,13 +31,6 @@ autoinstall:
     layout:
       name: lvm
 
-  # AC-003, AC-004: Identity fields left blank — filled interactively
-  # Subiquity will prompt for hostname, username, and password
-  identity:
-    hostname: ""
-    username: ""
-    password: ""
-
   # AC-007: Developer base packages
   # AC-016–AC-020: Dell Latitude 5400 hardware support
   packages:
@@ -100,8 +93,10 @@ autoinstall:
   updates: all
 
   # AC-012: Enable UFW firewall with default-deny inbound policy
+  # FEAT-0007: Dotfiles provisioning — replace GITHUB_USER/DOTFILES_REPO and uncomment when repo is ready
   late-commands:
     - curtin in-target -- ufw --force enable
+    # - curtin in-target -- sh -c "U=$(awk -F: '$3>=1000 && $3<65534 {print $1; exit}' /etc/passwd) && su - $U -c 'git clone https://github.com/GITHUB_USER/DOTFILES_REPO.git ~/.dotfiles && ~/.dotfiles/install.sh' || true"
 
   # AC-015: Reboot after installation completes
   shutdown: reboot

@@ -55,10 +55,26 @@
 5. Test in VM
 6. Merge → `status: implemented`
 
+## Verified Package List (Ubuntu 24.04 Noble)
+All packages confirmed in apt cache as of 2026-02-24:
+`git`, `curl`, `wget`, `build-essential`, `ca-certificates`, `gnupg`, `gufw`,
+`intel-microcode`, `thermald`, `alsa-ucm-conf`, `bolt`, `fwupd-signed`, `nodejs` (18.19.1 LTS), `npm`
+- `sof-firmware` does NOT exist in Ubuntu — SOF is bundled in `linux-firmware`
+
+Snaps confirmed available: `code`, `prompting-client`, `desktop-security-center`
+
+`ufw/enable` is a valid debconf key for the `ufw` package (Template confirmed).
+
+## Identity Section Behavior
+- The `identity:` block must be **absent** from the YAML entirely, not present with blank strings
+- Blank strings `""` cause subiquity to skip the interactive identity prompt on ubuntu-desktop-minimal
+- Only `interactive-sections: [network, identity]` is needed — no `identity:` block
+
 ## Important Rules (never violate)
 - Never hardcode credentials in any YAML
 - Only implement specs with `status: approved`
 - All late-commands must use `curtin in-target`
+- Never add an `identity:` block with blank values — omit the block entirely
 
 ## User Preferences
 - Spec-based development: no implementation without an approved spec

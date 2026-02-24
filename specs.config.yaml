@@ -100,6 +100,19 @@ specifications:
       - "embedded"
       - "arduino"
 
+  - id: "FEAT-0007"
+    file: "specs/features/FEAT-0007-dotfiles-provisioning.yaml"
+    status: "draft"
+    auto_implement: false
+    priority: "medium"
+    assignee: "jerry"
+    target_version: "1.1.0"
+    notes: "Dotfiles repo provisioning via late-command — template in Autoinstall.yaml, activate when GitHub repo is ready"
+    labels:
+      - "dotfiles"
+      - "toolchain"
+      - "late-commands"
+
   # - id: "API-0001"
   #   file: "specs/api/users-api.openapi.yaml"
   #   status: "approved"

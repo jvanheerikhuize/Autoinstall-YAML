@@ -78,6 +78,7 @@ acceptance_criteria:
     and:
       - "The identity section is listed under interactive-sections"
       - "No credentials (username, password, hostname) are hardcoded in the YAML"
+      - "No identity: block is present in the YAML — subiquity must request input with no fallback values"
 
   - id: "AC-004"
     given: "The identity step is interactive"
