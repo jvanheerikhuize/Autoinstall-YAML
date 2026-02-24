@@ -51,16 +51,54 @@ settings:
 specifications:
   - id: "FEAT-0001"
     file: "specs/features/FEAT-0001-ubuntu-developer-workstation.yaml"
-    status: "draft"  # draft | review | approved | implemented | deprecated
+    status: "approved"
     auto_implement: false
     priority: "high"
     assignee: "jerry"
     target_version: "1.0.0"
-    notes: "Initial autoinstall configuration for Ubuntu developer workstations"
+    notes: "Base autoinstall configuration for Ubuntu developer workstation (Dell Latitude 5400) — currently under VM testing"
     labels:
       - "ubuntu"
       - "autoinstall"
       - "developer-workstation"
+      - "dell-latitude-5400"
+
+  - id: "FEAT-0004"
+    file: "specs/features/FEAT-0004-automated-locale-timezone.yaml"
+    status: "approved"
+    auto_implement: false
+    priority: "medium"
+    assignee: "jerry"
+    target_version: "1.0.0"
+    notes: "Automate locale (en_US.UTF-8), keyboard (us), timezone (Europe/Amsterdam)"
+    labels:
+      - "locale"
+      - "timezone"
+
+  - id: "FEAT-0005"
+    file: "specs/features/FEAT-0005-openscad-environment.yaml"
+    status: "draft"
+    auto_implement: false
+    priority: "medium"
+    assignee: "jerry"
+    target_version: "1.1.0"
+    notes: "Install OpenSCAD for parametric 3D modeling"
+    labels:
+      - "openscad"
+      - "3d-modeling"
+
+  - id: "FEAT-0006"
+    file: "specs/features/FEAT-0006-esp32-development-environment.yaml"
+    status: "draft"
+    auto_implement: false
+    priority: "medium"
+    assignee: "jerry"
+    target_version: "1.1.0"
+    notes: "ESP32 toolchain: esptool, python3-serial, minicom, Arduino IDE snap, dialout group"
+    labels:
+      - "esp32"
+      - "embedded"
+      - "arduino"
 
   # - id: "API-0001"
   #   file: "specs/api/users-api.openapi.yaml"

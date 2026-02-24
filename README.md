@@ -22,7 +22,7 @@ Automated installation:
   • Third-party drivers + codecs
   • All updates applied
         ↓
-Machine powers off  →  Ready for first boot
+Machine reboots  →  Ready to log in
 ```
 
 ---
@@ -30,12 +30,14 @@ Machine powers off  →  Ready for first boot
 ## Repository Structure
 
 ```
-├── Autoinstall.yaml                # Active configuration (created when FEAT-0001 is approved)
-├── Autoinstall.example.yaml        # Reference example — format reference only
+├── Autoinstall.yaml                # Active configuration (implements FEAT-0001 + FEAT-0004)
 │
 ├── specs/
 │   ├── features/
-│   │   ├── FEAT-0001-ubuntu-developer-workstation.yaml  # Active spec
+│   │   ├── FEAT-0001-ubuntu-developer-workstation.yaml  # approved — base workstation config
+│   │   ├── FEAT-0004-automated-locale-timezone.yaml     # approved — locale/keyboard/timezone
+│   │   ├── FEAT-0005-openscad-environment.yaml          # draft — OpenSCAD 3D modeling
+│   │   ├── FEAT-0006-esp32-development-environment.yaml # draft — ESP32 toolchain
 │   │   └── _template.yaml                               # Template for new specs
 │   └── schemas/
 │       └── feature-spec.schema.json                     # Spec validation schema
@@ -68,9 +70,12 @@ Machine powers off  →  Ready for first boot
 
 | Spec | Title | Status |
 |------|-------|--------|
-| [FEAT-0001](specs/features/FEAT-0001-ubuntu-developer-workstation.yaml) | Ubuntu Developer Workstation Autoinstall | draft |
+| [FEAT-0001](specs/features/FEAT-0001-ubuntu-developer-workstation.yaml) | Ubuntu Developer Workstation Autoinstall | approved |
+| [FEAT-0004](specs/features/FEAT-0004-automated-locale-timezone.yaml) | Automated Locale, Keyboard, and Timezone | approved |
+| [FEAT-0005](specs/features/FEAT-0005-openscad-environment.yaml) | OpenSCAD 3D Modeling Environment | draft |
+| [FEAT-0006](specs/features/FEAT-0006-esp32-development-environment.yaml) | ESP32 Embedded Development Environment | draft |
 
-> `Autoinstall.yaml` will be created once FEAT-0001 is approved and implemented.
+> `Autoinstall.yaml` is active and implements all approved specs (FEAT-0001, FEAT-0004).
 
 ---
 

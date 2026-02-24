@@ -1,0 +1,125 @@
+# Feature Specification: ESP32 Embedded Development Environment
+# Validate against: specs/schemas/feature-spec.schema.json
+
+metadata:
+  id: "FEAT-0006"
+  title: "ESP32 Embedded Development Environment"
+  version: "1.0.0"
+  status: "draft"
+  priority: "medium"
+  author: "jerry"
+  created_at: "2026-02-24"
+  updated_at: "2026-02-24"
+  tags:
+    - ubuntu
+    - autoinstall
+    - esp32
+    - embedded
+    - arduino
+    - iot
+
+description:
+  summary: |
+    Install the tools required for ESP32 firmware development and add the developer
+    user to the dialout group so USB serial connections (for flashing and monitoring)
+    work without sudo.
+
+  problem_statement: |
+    ESP32 development on Linux requires:
+    1. esptool for flashing firmware over USB
+    2. A serial terminal (minicom) for monitoring output
+    3. PySerial for Python-based serial communication
+    4. Membership in the dialout group for USB serial access
+    5. Arduino IDE for Arduino-style development
+
+    After a fresh install, none of these are present and the user is not in the
+    dialout group. Flashing an ESP32 without group membership fails silently
+    (permission denied on /dev/ttyUSB0 or /dev/ttyACM0).
+
+  proposed_solution: |
+    1. Add esptool, python3-serial, and minicom to the packages list.
+    2. Add the Arduino IDE as a snap (arduino snap from the stable channel).
+    3. Add a late-command that adds the first non-system user (UID >= 1000) to the
+       dialout group. This works even though identity is interactive because the
+       command reads the installed system's /etc/passwd at late-command time.
+
+    PlatformIO IDE is a VS Code extension and is installed post-first-boot from
+    within VS Code — no autoinstall action required.
+
+  out_of_scope:
+    - "ESP-IDF framework installation (complex toolchain, better handled post-install)"
+    - "PlatformIO CLI (install post-first-boot via pip or VS Code)"
+    - "Custom board support packages"
+    - "OpenOCD / JTAG debugging setup"
+
+  dependencies:
+    - "FEAT-0001: Base autoinstall configuration (provides python3, VS Code snap)"
+
+acceptance_criteria:
+  - id: "AC-001"
+    given: "The installation completes"
+    when: "The package installation phase runs"
+    then: "ESP32 flashing tool is installed"
+    and:
+      - "The esptool package is present in the packages list"
+
+  - id: "AC-002"
+    given: "The installation completes"
+    when: "The package installation phase runs"
+    then: "Python serial communication library is installed"
+    and:
+      - "The python3-serial package is present in the packages list"
+
+  - id: "AC-003"
+    given: "The installation completes"
+    when: "The package installation phase runs"
+    then: "Serial terminal for monitoring ESP32 output is installed"
+    and:
+      - "The minicom package is present in the packages list"
+
+  - id: "AC-004"
+    given: "The installation completes"
+    when: "The snap installation phase runs"
+    then: "Arduino IDE is installed as a snap"
+    and:
+      - "The arduino snap is installed from the stable channel"
+
+  - id: "AC-005"
+    given: "The installation completes and a non-system user exists (UID >= 1000)"
+    when: "The late-commands phase runs"
+    then: "The developer user is added to the dialout group"
+    and:
+      - "A late-command reads the first UID >= 1000 user from /etc/passwd"
+      - "That user is added to the dialout group via usermod -aG dialout"
+      - "USB serial devices (/dev/ttyUSB0, /dev/ttyACM0) are accessible without sudo after reboot"
+
+technical_requirements:
+  constraints:
+    - "esptool, python3-serial, minicom must be sourced from the Ubuntu archive"
+    - "dialout group addition must use curtin in-target"
+    - "The late-command must not hardcode a username — it must discover the first UID >= 1000 user dynamically"
+    - "The late-command must be idempotent (usermod -aG is idempotent by nature)"
+
+  security:
+    - "dialout group grants access to serial devices — only grant to the primary user, not all users"
+
+testing_requirements:
+  unit_tests: false
+  integration_tests: false
+  e2e_tests: true
+  performance_tests: false
+  test_scenarios:
+    - "After install: dpkg -l esptool python3-serial minicom shows all installed"
+    - "After install: snap list arduino shows the snap is present"
+    - "After install: groups <username> includes dialout"
+    - "After install: ls -l /dev/ttyUSB0 shows dialout group ownership (when device plugged in)"
+    - "After install: esptool.py --chip esp32 chip_id succeeds without sudo (with device plugged in)"
+
+rollout:
+  rollout_strategy: "immediate"
+  rollback_plan: |
+    Remove esptool, python3-serial, minicom from packages.
+    Remove arduino from snaps.
+    Remove the dialout late-command.
+    The user will need to install these manually and run:
+      sudo usermod -aG dialout $USER && newgrp dialout

@@ -32,6 +32,25 @@
 ### One-Liner
 > Reproducible, spec-driven Ubuntu autoinstall YAML configurations for developer workstations, managed through a formal spec-based development workflow.
 
+### Developer Domains
+| Domain | Tools | Status |
+|--------|-------|--------|
+| JavaScript / Node.js | nodejs, npm, VS Code | Implemented (FEAT-0001) |
+| 3D modeling / CAD | OpenSCAD | Spec planned (FEAT-0005) |
+| ESP32 / embedded | esptool, python3-serial, minicom, Arduino IDE, dialout group | Spec planned (FEAT-0006) |
+
+### Target Hardware
+| Component | Detail |
+|-----------|--------|
+| Machine | Dell Inc. Latitude 5400 |
+| CPU | Intel 8th Gen Whiskey Lake (i5-8265U / i7-8665U) |
+| GPU | Intel UHD Graphics 620 |
+| Wi-Fi | Intel Wireless-AC 9560 (iwlwifi + linux-firmware) |
+| Audio | Realtek ALC256 (requires sof-firmware + alsa-ucm-conf) |
+| Fingerprint | Broadcom BCM58200 (handled via OEM stack) |
+| Thunderbolt | Thunderbolt 3 (managed by bolt) |
+| Firmware | Dell LVFS support via fwupd + fwupd-signed |
+
 ### Tech Stack
 | Layer | Technology |
 |-------|------------|
@@ -47,15 +66,18 @@
 ## 2. Current State
 
 ### Active Work
-- [x] FEAT-0001: Ubuntu Developer Workstation Autoinstall — spec drafted, awaiting review
+- [x] FEAT-0001: Ubuntu Developer Workstation Autoinstall — approved, implemented in Autoinstall.yaml
+- [x] FEAT-0004: Automated Locale, Keyboard, Timezone — approved, implemented in Autoinstall.yaml
+- [ ] FEAT-0005: OpenSCAD Environment — draft, pending approval
+- [ ] FEAT-0006: ESP32 Development Environment — draft, pending approval
 
 ### Recent Changes
-- 2026-02-24: Created FEAT-0001 spec for Ubuntu developer workstation autoinstall
-- 2026-02-24: Initialized repository from spec-driven development template
+- 2026-02-24: Implemented Autoinstall.yaml from FEAT-0001 (base workstation) and FEAT-0004 (locale/timezone)
+- 2026-02-24: Added Dell Latitude 5400 hardware support packages (AC-016–AC-020)
+- 2026-02-24: Added Node.js/npm (AC-021), OpenSCAD spec (FEAT-0005), ESP32 spec (FEAT-0006)
 
 ### Known Issues
-- No `Autoinstall.yaml` yet — FEAT-0001 spec must be approved before implementation begins
-- `Autoinstall.example.yaml` is a reference file only; it is not representative of the final configuration
+- FEAT-0005 and FEAT-0006 are in draft — review and approve before implementing
 
 ---
 
@@ -98,7 +120,7 @@
 | Updates | APT mirror and update policy | `apt`, `updates` |
 
 ### Critical Paths
-1. **Installation flow**: ISO boot → subiquity reads YAML → interactive network → interactive identity → automated installation → late-commands → poweroff
+1. **Installation flow**: ISO boot → subiquity reads YAML → interactive network → interactive identity → automated installation → late-commands → reboot
 2. **Spec flow**: Draft spec → review → approve → implement YAML → validate → merge
 
 ---
@@ -108,18 +130,19 @@
 ### Entry Points
 | Purpose | Location |
 |---------|----------|
-| Final autoinstall config (to be created) | `Autoinstall.yaml` |
-| Reference example (not representative) | `Autoinstall.example.yaml` |
+| Active autoinstall config | `Autoinstall.yaml` |
 | Active feature spec | `specs/features/FEAT-0001-ubuntu-developer-workstation.yaml` |
 | Spec registry | `specs.config.yaml` |
 
 ### Key Files
 ```
-Autoinstall.yaml               # Target output — created when FEAT-0001 is implemented
-Autoinstall.example.yaml       # Reference only — shows format, not intended config
+Autoinstall.yaml               # Active config — implements FEAT-0001 + FEAT-0004
 specs/
 ├── features/
-│   ├── FEAT-0001-ubuntu-developer-workstation.yaml  # Active spec
+│   ├── FEAT-0001-ubuntu-developer-workstation.yaml  # approved — base workstation
+│   ├── FEAT-0004-automated-locale-timezone.yaml     # approved — locale/keyboard/timezone
+│   ├── FEAT-0005-openscad-environment.yaml          # draft
+│   ├── FEAT-0006-esp32-development-environment.yaml # draft
 │   └── _template.yaml                               # Template for new specs
 └── schemas/
     └── feature-spec.schema.json                     # Spec validation schema
@@ -151,7 +174,7 @@ specs.config.yaml              # Central spec registry
 1. Minimal interactive sections — automate everything that does not require per-machine values
 2. `curtin in-target` for all late-command chroot operations
 3. Explicit APT mirror over GeoIP-selected mirrors
-4. `poweroff` over `reboot` after installation (machine is ready for first boot on demand)
+4. `reboot` after installation so the machine boots directly into the installed system
 
 ### Avoid
 1. Hardcoded credentials of any kind
@@ -231,7 +254,6 @@ cat specs/features/FEAT-0001-ubuntu-developer-workstation.yaml
 
 ### Forbidden Actions
 - Write credentials into any YAML file
-- Modify `Autoinstall.example.yaml` — it is a reference file, not the active config
 - Implement features not covered by an approved spec
 - Add third-party APT repositories without explicit spec approval
 

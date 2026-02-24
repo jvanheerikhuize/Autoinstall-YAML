@@ -1,0 +1,72 @@
+# Feature Specification: OpenSCAD 3D Modeling Environment
+# Validate against: specs/schemas/feature-spec.schema.json
+
+metadata:
+  id: "FEAT-0005"
+  title: "OpenSCAD Parametric 3D Modeling Environment"
+  version: "1.0.0"
+  status: "draft"
+  priority: "medium"
+  author: "jerry"
+  created_at: "2026-02-24"
+  updated_at: "2026-02-24"
+  tags:
+    - ubuntu
+    - autoinstall
+    - openscad
+    - 3d-modeling
+    - cad
+
+description:
+  summary: |
+    Install OpenSCAD and supporting libraries so parametric 3D modeling is available
+    immediately after first boot, without any manual package installation.
+
+  problem_statement: |
+    OpenSCAD is not included in ubuntu-desktop-minimal. After a fresh install,
+    the developer must manually install it before being able to open or edit .scad
+    files. On a reinstall, this is a repeated manual step that is easily forgotten.
+
+  proposed_solution: |
+    Add openscad to the packages list in Autoinstall.yaml. The Ubuntu 24.04
+    archive provides OpenSCAD 2021.01; this is sufficient for parametric modeling
+    work. No additional repositories or late-commands are required.
+
+    If a more recent release is needed in the future, an AppImage or the
+    openscad-nightly PPA can be added via a follow-up spec.
+
+  out_of_scope:
+    - "FreeCAD or other CAD tools"
+    - "Slicer software (Cura, PrusaSlicer) — separate spec if needed"
+    - "OpenSCAD library management (MCAD, BOSL2) — handled post-install"
+
+  dependencies:
+    - "FEAT-0001: Base autoinstall configuration"
+
+acceptance_criteria:
+  - id: "AC-001"
+    given: "The installation completes"
+    when: "The package installation phase runs"
+    then: "OpenSCAD is installed and available"
+    and:
+      - "The openscad package is present in the packages list"
+      - "openscad --version succeeds on first boot"
+
+technical_requirements:
+  constraints:
+    - "Package must be sourced from the Ubuntu 24.04 main or universe archive"
+    - "No third-party PPA required for the initial spec"
+
+testing_requirements:
+  unit_tests: false
+  integration_tests: false
+  e2e_tests: false
+  performance_tests: false
+  test_scenarios:
+    - "After install: dpkg -l openscad shows the package is installed"
+    - "After install: openscad can be launched from the application menu"
+
+rollout:
+  rollout_strategy: "immediate"
+  rollback_plan: |
+    Remove openscad from the packages list in Autoinstall.yaml.

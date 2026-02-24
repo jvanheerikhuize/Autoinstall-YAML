@@ -132,7 +132,6 @@ domain:
     - "The identity section must always remain interactive — no default username or password"
     - "Only implement what is covered by an approved spec (status: approved)"
     - "All late-commands must use 'curtin in-target' for chroot execution"
-    - "Autoinstall.example.yaml is a reference file only — do not treat it as the active config"
     - "APT mirror fallback must always be set to abort"
 
 # AI CLI Integration Settings

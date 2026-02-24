@@ -67,6 +67,9 @@ autoinstall:
   │
   ├── refresh-installer         # Self-update before proceeding
   ├── oem                       # OEM kernel auto-detection
+  ├── locale                    # System locale (en_US.UTF-8)
+  ├── keyboard                  # Keyboard layout (us)
+  ├── timezone                  # System timezone (Europe/Amsterdam)
   ├── interactive-sections      # [network, identity] — pauses for user
   ├── source                    # ubuntu-desktop-minimal
   ├── storage                   # LVM layout
@@ -79,7 +82,7 @@ autoinstall:
   ├── apt                       # Mirror config, GeoIP off
   ├── updates                   # all (security + general)
   ├── late-commands             # Post-install chroot commands
-  └── shutdown                  # poweroff after install
+  └── shutdown                  # reboot after install
 ```
 
 ### 2.2 Section Descriptions
@@ -89,6 +92,9 @@ autoinstall:
 | `version` | Declares subiquity config version | Yes |
 | `refresh-installer` | Updates installer from `stable/ubuntu-$REL` channel | Yes |
 | `oem` | Auto-installs OEM kernel if hardware recommends it | Yes |
+| `locale` | Sets system locale to `en_US.UTF-8` | Yes |
+| `keyboard` | Sets keyboard layout to `us` | Yes |
+| `timezone` | Sets system timezone to `Europe/Amsterdam` | Yes |
 | `interactive-sections` | Lists sections that pause for user input | — |
 | `source` | Selects `ubuntu-desktop-minimal` as installation source | Yes |
 | `storage` | Configures LVM disk layout | Yes |
@@ -102,7 +108,7 @@ autoinstall:
 | `apt` | Configures APT mirror; disables GeoIP | Yes |
 | `updates` | Applies security + general updates pre-boot | Yes |
 | `late-commands` | Runs arbitrary commands in the chroot after install | Yes |
-| `shutdown` | Powers off the machine after installation completes | Yes |
+| `shutdown` | Reboots the machine after installation completes | Yes |
 
 ---
 

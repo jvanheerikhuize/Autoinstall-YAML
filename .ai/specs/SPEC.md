@@ -46,7 +46,7 @@ Autoinstall YAML solves this by:
 ### 2.2 User Journey
 ```
 [Boot Ubuntu ISO] → [Network config (interactive)] → [Identity config (interactive)]
-        → [Automated installation] → [Machine powers off]
+        → [Automated installation] → [Machine reboots]
         → [First boot: system is ready with all tools installed]
 ```
 
@@ -105,20 +105,23 @@ Autoinstall YAML solves this by:
 - **User Story**: As a developer, I want my machine to be fully up-to-date the moment I first log in
 - **Acceptance Criteria**: See FEAT-0001 AC-011
 
-#### Feature: Poweroff After Installation
+#### Feature: Reboot After Installation
 - **ID**: F-008
 - **Priority**: Should Have
-- **Description**: Machine powers off rather than rebooting after installation completes
-- **User Story**: As a developer or sysadmin, I want the machine to power off so I can remove the installation media before first boot
+- **Description**: Machine reboots automatically after installation completes
+- **User Story**: As a developer, I want the machine to reboot directly into the installed system when the installation finishes
 - **Acceptance Criteria**: See FEAT-0001 AC-015
 
 ### 3.2 Feature Roadmap
 
-| Phase | Features | Spec |
-|-------|----------|------|
-| v1.0 — Developer workstation | F-001 through F-008 | FEAT-0001 |
-| v1.1 — Full disk encryption | LUKS encryption layer | FEAT-0002 (planned) |
-| v1.2 — Corporate enrollment | MDM / Intune enrollment | FEAT-0003 (planned) |
+| Phase | Features | Spec | Status |
+|-------|----------|------|--------|
+| v1.0 — Developer workstation | F-001 through F-008 | FEAT-0001 | approved / implemented |
+| v1.0 — Locale, keyboard, timezone | Automated locale/keyboard/timezone | FEAT-0004 | approved / implemented |
+| v1.1 — OpenSCAD environment | OpenSCAD 3D modeling tools | FEAT-0005 | draft |
+| v1.1 — ESP32 environment | ESP32 toolchain + Arduino IDE | FEAT-0006 | draft |
+| v1.2 — Full disk encryption | LUKS encryption layer | FEAT-0002 (planned) | — |
+| v1.2 — Corporate enrollment | MDM / Intune enrollment | FEAT-0003 (planned) | — |
 
 ---
 
@@ -185,7 +188,7 @@ Autoinstall YAML solves this by:
 ### 7.1 Key Performance Indicators
 | Metric | Target |
 |--------|--------|
-| Time from ISO boot to poweroff | < 45 minutes on supported hardware |
+| Time from ISO boot to first login | < 45 minutes on supported hardware |
 | Manual steps required | 2 (network config, identity config) |
 | Packages missing after first boot | 0 (all spec packages present) |
 | UFW status after first boot | active (enabled) |
@@ -193,7 +196,7 @@ Autoinstall YAML solves this by:
 ### 7.2 Definition of Done
 The configuration is considered complete when:
 - [ ] All acceptance criteria in FEAT-0001 pass
-- [ ] Machine successfully installs and powers off unattended (after network + identity)
+- [ ] Machine successfully installs and reboots unattended (after network + identity)
 - [ ] All specified packages and snaps are present on first boot
 - [ ] UFW is active on first boot
 - [ ] No credentials are present in the YAML

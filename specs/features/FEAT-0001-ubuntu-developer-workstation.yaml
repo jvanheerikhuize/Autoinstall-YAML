@@ -5,7 +5,7 @@ metadata:
   id: "FEAT-0001"
   title: "Ubuntu Developer Workstation Autoinstall Configuration"
   version: "1.0.0"
-  status: "draft"  # draft | review | approved | implemented | deprecated
+  status: "approved"  # draft | review | approved | implemented | deprecated
   priority: "high"
   author: "jerry"
   created_at: "2026-02-24"
@@ -15,6 +15,7 @@ metadata:
     - autoinstall
     - developer-workstation
     - desktop
+    - dell-latitude-5400
 
 description:
   summary: |
@@ -53,6 +54,7 @@ description:
 
   dependencies:
     - "Ubuntu Desktop ISO (24.04 LTS or later) with subiquity installer"
+    - "Target hardware: Dell Inc. Latitude 5400 (Intel 8th Gen Whiskey Lake)"
 
 acceptance_criteria:
   - id: "AC-001"
@@ -160,9 +162,55 @@ acceptance_criteria:
   - id: "AC-015"
     given: "The installation completes"
     when: "The shutdown section is evaluated"
-    then: "The machine powers off after installation completes"
+    then: "The machine reboots after installation completes"
     and:
-      - "The shutdown field is set to poweroff"
+      - "The shutdown field is set to reboot"
+
+  # Dell Latitude 5400 hardware support
+  - id: "AC-016"
+    given: "The target machine is a Dell Latitude 5400 with an Intel 8th Gen (Whiskey Lake) CPU"
+    when: "The package installation phase runs"
+    then: "Intel CPU microcode is installed"
+    and:
+      - "The intel-microcode package is present in the packages list"
+
+  - id: "AC-017"
+    given: "The target machine is a Dell Latitude 5400"
+    when: "The package installation phase runs"
+    then: "Intel thermal management is installed"
+    and:
+      - "The thermald package is present in the packages list"
+
+  - id: "AC-018"
+    given: "The target machine is a Dell Latitude 5400 with a Realtek ALC256 audio chipset"
+    when: "The package installation phase runs"
+    then: "Sound Open Firmware and UCM audio configuration are installed"
+    and:
+      - "The sof-firmware package is present in the packages list"
+      - "The alsa-ucm-conf package is present in the packages list"
+
+  - id: "AC-019"
+    given: "The target machine is a Dell Latitude 5400 with Thunderbolt 3"
+    when: "The package installation phase runs"
+    then: "Thunderbolt device management is installed"
+    and:
+      - "The bolt package is present in the packages list"
+
+  - id: "AC-020"
+    given: "The target machine is a Dell Latitude 5400 with Dell LVFS firmware support"
+    when: "The package installation phase runs"
+    then: "Signed firmware update support is installed"
+    and:
+      - "The fwupd-signed package is present in the packages list"
+
+  # JavaScript / Node.js development
+  - id: "AC-021"
+    given: "The installation completes"
+    when: "The package installation phase runs"
+    then: "Node.js runtime and npm package manager are installed"
+    and:
+      - "The nodejs package is present in the packages list"
+      - "The npm package is present in the packages list"
 
 technical_requirements:
   constraints:
