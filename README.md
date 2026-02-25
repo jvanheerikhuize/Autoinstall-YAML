@@ -2,6 +2,8 @@
 
 Reproducible, spec-driven **Ubuntu autoinstall configurations** for developer workstations.
 
+https://tinyurl.com/jvh-autoinstall
+
 This repository contains version-controlled [Ubuntu Autoinstall](https://ubuntu.com/server/docs/install/autoinstall-reference) (subiquity) YAML files that provision a developer workstation consistently and without manual intervention — except for the two things that must be per-machine: **network configuration** and **user identity**.
 
 Changes to the configuration are governed by a **spec-based development workflow**: every modification starts with a formal feature specification that must be reviewed and approved before it is implemented.
@@ -18,7 +20,7 @@ Changes to the configuration are governed by a **spec-based development workflow
 │   Find the line starting with  linux                             │
 │   Append to the end of that line:                                │
 │                                                                  │
-│   autoinstall cloud-config-url=https://tinyurl.com/YOUR-ALIAS   │
+│   autoinstall cloud-config-url=https://tinyurl.com/jvh-autoinstall   │
 │                                                                  │
 │   Press  F10  to boot                                            │
 │                                                                  │
@@ -26,7 +28,7 @@ Changes to the configuration are governed by a **spec-based development workflow
 ```
 
 > [!NOTE]
-> Replace `YOUR-ALIAS` with your custom TinyURL alias (see setup below). The installer fetches the config from that URL, pauses for **network** and **identity**, then runs completely unattended until reboot.
+> The installer fetches the config from the TinyURL above, pauses for **network** and **identity**, then runs completely unattended until reboot.
 
 ---
 
@@ -40,7 +42,7 @@ The short URL points to the raw `user-data` file in this repository. Create it o
 | 2 | Paste the long URL: `https://raw.githubusercontent.com/jvanheerikhuize/Autoinstall-YAML/main/user-data` |
 | 3 | Set a custom alias (e.g. `jvh-autoinstall`) |
 | 4 | Click **Make TinyURL** |
-| 5 | Replace `YOUR-ALIAS` above with your alias and commit |
+| 5 | ✓ Done — alias is `jvh-autoinstall` |
 
 > [!TIP]
 > TinyURL custom links are free, require no account, and never expire. Use something memorable — you'll type or paste this at the boot prompt.
