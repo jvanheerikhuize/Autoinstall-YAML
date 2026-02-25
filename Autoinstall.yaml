@@ -59,10 +59,14 @@ autoinstall:
 
   # AC-008: Developer and security snap packages
   snaps:
+    # Visual Studio Code — primary code editor (classic snap: needs filesystem access)
     - name: code
       channel: stable
+      classic: true
+    # AppArmor prompting client — handles permission prompts for confined apps
     - name: prompting-client
       channel: stable
+    # Ubuntu Desktop Security Center — GUI for managing AppArmor and security policies
     - name: desktop-security-center
       channel: stable
 
