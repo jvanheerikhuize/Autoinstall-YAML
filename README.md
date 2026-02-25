@@ -34,12 +34,12 @@ Changes to the configuration are governed by a **spec-based development workflow
 
 ### One-time URL setup
 
-The short URL points to the raw `user-data` file in this repository. Create it once on [tinyurl.com](https://tinyurl.com) — it never expires:
+The short URL points to the raw `Autoinstall.yaml` file in this repository. Create it once on [tinyurl.com](https://tinyurl.com) — it never expires:
 
 | Step | Action |
 |------|--------|
 | 1 | Go to **[tinyurl.com](https://tinyurl.com)** |
-| 2 | Paste the long URL: `https://raw.githubusercontent.com/jvanheerikhuize/Autoinstall-YAML/main/user-data` |
+| 2 | Paste the long URL: `https://raw.githubusercontent.com/jvanheerikhuize/Autoinstall-YAML/main/Autoinstall.yaml` |
 | 3 | Set a custom alias (e.g. `jvh-autoinstall`) |
 | 4 | Click **Make TinyURL** |
 | 5 | ✓ Done — alias is `jvh-autoinstall` |
@@ -55,7 +55,7 @@ The short URL points to the raw `user-data` file in this repository. Create it o
   Boot ISO + kernel parameter
            │
            ▼
-  Installer fetches user-data
+  Installer fetches Autoinstall.yaml
   from your TinyURL → GitHub raw
            │
      ┌─────▼─────┐    ┌─────────────────┐
@@ -106,9 +106,7 @@ Machine reboots  →  Ready to log in
 ## Repository Structure
 
 ```
-├── Autoinstall.yaml                # Active configuration (implements FEAT-0001 + FEAT-0004)
-├── user-data                       # GitHub Pages: served at jvanheerikhuize.github.io/Autoinstall-YAML/
-├── meta-data                       # GitHub Pages: required by nocloud-net datasource (static)
+├── Autoinstall.yaml                # Active configuration — also served via TinyURL for quick deploy
 │
 ├── specs/
 │   ├── features/
@@ -194,7 +192,7 @@ Required fields: `metadata.id`, `metadata.title`, `metadata.version`, `metadata.
 
 ## Testing the Autoinstall YAML
 
-The recommended way to test is to boot an Ubuntu Desktop ISO in a virtual machine and pass the `Autoinstall.yaml` via the subiquity `autoinstall` kernel parameter or a `user-data` file on a cloud-init data source.
+The recommended way to test is to boot an Ubuntu Desktop ISO in a virtual machine and use the TinyURL kernel parameter from the Quick Deploy section above.
 
 ```bash
 # Example: serve the YAML over HTTP and boot with:

@@ -25,8 +25,8 @@
 
 ## Key Files
 - `Autoinstall.yaml` — active autoinstall config (implements FEAT-0001 + FEAT-0004)
-- `specs/features/FEAT-0001-ubuntu-developer-workstation.yaml` — base workstation spec (status: approved)
-- `specs/features/FEAT-0004-automated-locale-timezone.yaml` — locale/timezone spec (status: approved)
+- `specs/features/FEAT-0001-ubuntu-developer-workstation.yaml` — base workstation spec (status: implemented)
+- `specs/features/FEAT-0004-automated-locale-timezone.yaml` — locale/timezone spec (status: implemented)
 - `specs/features/FEAT-0005-openscad-environment.yaml` — OpenSCAD spec (status: draft)
 - `specs/features/FEAT-0006-esp32-development-environment.yaml` — ESP32 spec (status: draft)
 - `specs.config.yaml` — central spec registry
@@ -45,7 +45,8 @@
 - **Node.js**: nodejs + npm from Ubuntu archive (Node 18 LTS); nvm post-install if multiple versions needed
 
 ## Active Work
-- FEAT-0001: Ubuntu Developer Workstation Autoinstall — status: approved, Autoinstall.yaml implemented
+- FEAT-0001: Ubuntu Developer Workstation Autoinstall — status: implemented
+- FEAT-0004: Automated Locale/Timezone — status: implemented
 
 ## Spec Workflow
 1. Draft spec in `specs/features/FEAT-XXXX-<name>.yaml`
@@ -62,6 +63,8 @@ All packages confirmed in apt cache as of 2026-02-24:
 - `sof-firmware` does NOT exist in Ubuntu — SOF is bundled in `linux-firmware`
 
 Snaps confirmed available: `code`, `prompting-client`, `desktop-security-center`
+- `code` (VS Code) is a **classic snap** — requires `classic: true` in the autoinstall YAML or `snap install code` fails
+- `prompting-client` and `desktop-security-center` use strict confinement — no `classic: true` needed
 
 `ufw/enable` is a valid debconf key for the `ufw` package (Template confirmed).
 

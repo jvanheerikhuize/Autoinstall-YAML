@@ -51,12 +51,12 @@ settings:
 specifications:
   - id: "FEAT-0001"
     file: "specs/features/FEAT-0001-ubuntu-developer-workstation.yaml"
-    status: "approved"
+    status: "implemented"
     auto_implement: false
     priority: "high"
     assignee: "jerry"
     target_version: "1.0.0"
-    notes: "Base autoinstall configuration for Ubuntu developer workstation (Dell Latitude 5400) — currently under VM testing"
+    notes: "Base autoinstall configuration for Ubuntu developer workstation (Dell Latitude 5400)"
     labels:
       - "ubuntu"
       - "autoinstall"
@@ -65,7 +65,7 @@ specifications:
 
   - id: "FEAT-0004"
     file: "specs/features/FEAT-0004-automated-locale-timezone.yaml"
-    status: "approved"
+    status: "implemented"
     auto_implement: false
     priority: "medium"
     assignee: "jerry"

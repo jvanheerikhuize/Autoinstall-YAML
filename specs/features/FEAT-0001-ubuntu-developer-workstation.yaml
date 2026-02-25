@@ -5,7 +5,7 @@ metadata:
   id: "FEAT-0001"
   title: "Ubuntu Developer Workstation Autoinstall Configuration"
   version: "1.0.0"
-  status: "approved"  # draft | review | approved | implemented | deprecated
+  status: "implemented"  # draft | review | approved | implemented | deprecated
   priority: "high"
   author: "jerry"
   created_at: "2026-02-24"

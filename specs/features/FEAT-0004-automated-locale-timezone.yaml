@@ -5,7 +5,7 @@ metadata:
   id: "FEAT-0004"
   title: "Automated Locale, Keyboard Layout, and Timezone Configuration"
   version: "1.0.0"
-  status: "approved"
+  status: "implemented"
   priority: "medium"
   author: "jerry"
   created_at: "2026-02-24"
