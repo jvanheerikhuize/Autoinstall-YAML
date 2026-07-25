@@ -235,3 +235,9 @@ Claude Code users: the `.claude/CLAUDE.md` file is auto-loaded and instructs Cla
 - [Ubuntu Autoinstall Reference](https://ubuntu.com/server/docs/install/autoinstall-reference)
 - [Ubuntu Autoinstall Quick Start](https://ubuntu.com/server/docs/install/autoinstall-quickstart)
 - [Subiquity on GitHub](https://github.com/canonical/subiquity)
+
+## Roadmap
+
+Roadmap tracked in [branch: TinyURL system + CI validation](https://github.com/jvanheerikhuize/Autoinstall-YAML). See commits for current progress.
+
+---
