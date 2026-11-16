@@ -35,6 +35,7 @@ autoinstall:
   storage:
     layout:
       name: lvm
+      sizing-policy: all   # use the whole disk; default leaves half of it unallocated
 
   # Developer base packages and Dell Latitude 5400 hardware support
   packages:
