@@ -1,3 +1,8 @@
+#cloud-config
+# FEAT-0008 AC-001: the #cloud-config header is mandatory when this file is delivered
+# through cloud-init (cloud-config-url= or ds=nocloud-net). Without it cloud-init ignores
+# the payload and the installer silently falls back to interactive mode.
+# Target release: Ubuntu 26.04 LTS (Resolute Raccoon); 24.04 LTS remains compatible.
 autoinstall:
   version: 1
 
@@ -53,7 +58,7 @@ autoinstall:
     - bolt
     # Signed firmware updates via Dell LVFS — BIOS, EC, dock firmware (AC-020)
     - fwupd-signed
-    # Node.js runtime and npm — Ubuntu 24.04 ships Node 18 LTS (AC-021)
+    # Node.js runtime and npm — Ubuntu 26.04 ships Node 22 LTS, 24.04 ships Node 18 (AC-021)
     - nodejs
     - npm
 
@@ -97,10 +102,12 @@ autoinstall:
   updates: all
 
   # AC-012: Enable UFW firewall with default-deny inbound policy
-  # FEAT-0007: Dotfiles provisioning — replace GITHUB_USER/DOTFILES_REPO and uncomment when repo is ready
+  # FEAT-0007 (draft): Dotfiles provisioning — github.com/jvanheerikhuize/dotfiles is public
+  # with install.sh at its root (verified 2026-11-16). Uncomment once FEAT-0007 is approved and
+  # the command has been tested in a VM. Failures are logged, never swallowed.
   late-commands:
     - curtin in-target -- ufw --force enable
-    # - curtin in-target -- sh -c "U=$(awk -F: '$3>=1000 && $3<65534 {print $1; exit}' /etc/passwd) && su - $U -c 'git clone https://github.com/GITHUB_USER/DOTFILES_REPO.git ~/.dotfiles && ~/.dotfiles/install.sh' || true"
+    # - curtin in-target -- sh -c "U=$(awk -F: '$3>=1000 && $3<65534 {print $1; exit}' /etc/passwd) && su - $U -c 'git clone https://github.com/jvanheerikhuize/dotfiles.git ~/.dotfiles && ~/.dotfiles/install.sh' >/var/log/autoinstall-dotfiles.log 2>&1 || echo 'dotfiles provisioning failed, see /var/log/autoinstall-dotfiles.log' >> /var/log/autoinstall-dotfiles.log"
 
   # AC-015: Reboot after installation completes
   shutdown: reboot

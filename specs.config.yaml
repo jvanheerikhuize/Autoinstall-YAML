@@ -42,7 +42,7 @@ settings:
 
   # AI implementation settings
   ai:
-    model: "claude-sonnet-4-20250514"  # Model for implementation
+    model: "claude-opus-5-5"  # Model for implementation (updated 2026-11-16)
     max_retries: 3                      # Retry failed implementations
     timeout_minutes: 30                 # Max time per spec
 
@@ -107,11 +107,24 @@ specifications:
     priority: "medium"
     assignee: "jerry"
     target_version: "1.1.0"
-    notes: "Dotfiles repo provisioning via late-command — template in Autoinstall.yaml, activate when GitHub repo is ready"
+    notes: "Dotfiles repo provisioning via late-command — github.com/jvanheerikhuize/dotfiles is public, template in Autoinstall.yaml carries the real URL, activate after FEAT-0008 verification"
     labels:
       - "dotfiles"
       - "toolchain"
       - "late-commands"
+
+  - id: "FEAT-0008"
+    file: "specs/features/FEAT-0008-cloud-init-delivery.yaml"
+    status: "review"
+    auto_implement: false
+    priority: "critical"
+    assignee: "jerry"
+    target_version: "1.0.1"
+    notes: "#cloud-config header so cloud-config-url delivery works, plus one verified VM install on record"
+    labels:
+      - "cloud-init"
+      - "deployment"
+      - "validation"
 
   # - id: "API-0001"
   #   file: "specs/api/users-api.openapi.yaml"
