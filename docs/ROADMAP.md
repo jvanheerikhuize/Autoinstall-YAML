@@ -52,6 +52,10 @@ then a single top-level `autoinstall:` key.
 
 ### 0.3 Repository decluttered (same day)
 
+Second pass, same day: the spec system itself (`specs/`, the JSON schema, `scripts/validate-specs.sh`,
+the CI job) was removed as well. Changes to `Autoinstall.yaml` are now ordinary pull requests.
+FEAT-xxxx and AC-xxx identifiers in this document are historical.
+
 The template layer that came with the repository was removed: `.ai/`, `.claude/`, `memory/`,
 `AGENTS.md`, the integration and ingestion workflows and scripts, the issue and PR templates,
 `specs.config.yaml`, `specs/api/`, `docs/runbooks/`, `docs/integrations.md`,

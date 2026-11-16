@@ -163,15 +163,14 @@ are repos, synced folders and ollama models.
 
 ### 4.1 Autoinstall-YAML (stage 1)
 
-| # | Item | Spec |
+| # | Item | Note |
 |---|------|------|
-| A1 | Merge PR #3 (header), run the VirtualBox install, record it | FEAT-0008 |
-| A2 | Add `flatpak` to `packages`, add Flathub remote in `late-commands` (`flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo`) | FEAT-0009 |
-| A3 | Add `gh` to `packages` | FEAT-0009 |
-| A4 | Remove `nodejs`, `npm`, `gufw`, the `code` snap | FEAT-0009 (supersedes AC-007/008/021 of FEAT-0001) |
-| A5 | Decide LUKS: add `storage` to `interactive-sections` | FEAT-0010, owner decision |
-| A6 | Write `.ai/decisions/0001-stage-ownership.md` from §1 of this plan | ADR |
-| A7 | Close FEAT-0005 (OpenSCAD is stage 2, as Flatpak `org.openscad.OpenSCAD` nightly or the snap) and move FEAT-0006 content into a dotfiles profile `embedded` | spec hygiene |
+| A1 | Merge PR #5 (header), run the VirtualBox install, record it under `docs/` | gate for everything else |
+| A2 | Add `flatpak` to `packages`, add Flathub remote in `late-commands` (`flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo`) | decision D3 |
+| A3 | Add `gh` to `packages` | stage 0 needs it |
+| A4 | Remove `nodejs`, `npm`, `gufw`, the `code` snap | ownership rule §1 |
+| A5 | Decide LUKS: add `storage` to `interactive-sections` | owner decision |
+| A6 | OpenSCAD and the ESP32 toolchain are stage 2 concerns: OpenSCAD as Flatpak, ESP32 as a dotfiles profile `embedded` | spec hygiene |
 
 ### 4.2 dotfiles (stage 2)
 
@@ -183,7 +182,7 @@ are repos, synced folders and ollama models.
 | B4 | Drop `docker.io`/`docker-compose` from `dev` (not installed today, no Docker on this host by policy) and the pinned `gh` deb (stage 1 has it) |
 | B5 | Add `dconf.ini` export/import, `~/.config/alacritty`, `starship.toml`, Nerd Font install |
 | B6 | Add vendor repo handling for VS Code and VirtualBox only; remove Chrome and Signal repos (Flatpak) |
-| B7 | Add profile `embedded` (adb, fastboot, arm-none-eabi toolchain, `esptool`, `python3-serial`, `minicom`, `dialout` group) replacing FEAT-0006 |
+| B7 | Add profile `embedded` (adb, fastboot, arm-none-eabi toolchain, `esptool`, `python3-serial`, `minicom`, `dialout` group) |
 | B8 | Refresh `docs/MACHINE-INVENTORY.md` from §3 |
 
 ### 4.3 agentic-workspace (stage 3)

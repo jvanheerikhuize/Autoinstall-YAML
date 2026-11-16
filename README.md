@@ -7,7 +7,7 @@ Short URL for the boot prompt: https://tinyurl.com/jvh-autoinstall
 Target release is **Ubuntu 26.04 LTS (Resolute Raccoon)**; 24.04 LTS is the minimum. Reference machine: Dell Latitude 5400.
 
 > [!IMPORTANT]
-> As of 2026-11-16 no install has been verified end to end from this file. The `#cloud-config` header required for the deploy path below was only added in FEAT-0008. See [docs/ROADMAP.md](docs/ROADMAP.md).
+> As of 2026-11-16 no install has been verified end to end from this file. The `#cloud-config` header required for the deploy path below was only added that day. See [docs/ROADMAP.md](docs/ROADMAP.md).
 
 This is **stage 1** of a three-stage machine rebuild. Stage 2 is [dotfiles](https://github.com/jvanheerikhuize/dotfiles) (apps and configuration), stage 3 is [agentic-workspace](https://github.com/jvanheerikhuize/agentic-workspace) (agent tooling). The split, the decisions and the rebuild runbook are in [docs/stateless-laptop-plan.md](docs/stateless-laptop-plan.md).
 
@@ -68,40 +68,16 @@ Editors, runtimes and GUI apps belong to stage 2. Items still in this file that 
 ```text
 ├── Autoinstall.yaml          # The product; served via TinyURL
 ├── PURPOSE.md
-├── docs/
-│   ├── ROADMAP.md            # Grounded findings and status
-│   └── stateless-laptop-plan.md
-├── specs/
-│   ├── features/             # FEAT-xxxx specs; one per change to Autoinstall.yaml
-│   │   └── _template.yaml
-│   └── schemas/feature-spec.schema.json
-└── scripts/
-    └── validate-specs.sh     # Local schema check (python3 + PyYAML + jsonschema)
+└── docs/
+    ├── ROADMAP.md            # Grounded findings and status
+    └── stateless-laptop-plan.md
 ```
-
----
-
-## Current Status
-
-| Spec | Title | Status |
-|------|-------|--------|
-| [FEAT-0001](specs/features/FEAT-0001-ubuntu-developer-workstation.yaml) | Ubuntu Developer Workstation Autoinstall | implemented |
-| [FEAT-0004](specs/features/FEAT-0004-automated-locale-timezone.yaml) | Automated Locale, Keyboard, and Timezone | implemented |
-| [FEAT-0005](specs/features/FEAT-0005-openscad-environment.yaml) | OpenSCAD 3D Modeling Environment | draft, to be closed (stage 2) |
-| [FEAT-0006](specs/features/FEAT-0006-esp32-development-environment.yaml) | ESP32 Embedded Development Environment | draft, to move to a dotfiles profile |
-| [FEAT-0007](specs/features/FEAT-0007-dotfiles-provisioning.yaml) | Dotfiles Provisioning | draft |
-| [FEAT-0008](specs/features/FEAT-0008-cloud-init-delivery.yaml) | Deployable via cloud-init and verified end to end | review |
 
 ---
 
 ## Changing the file
 
-Every change to `Autoinstall.yaml` starts with a spec:
-
-1. Copy `specs/features/_template.yaml` to `specs/features/FEAT-xxxx-<name>.yaml`, status `draft`.
-2. Run `scripts/validate-specs.sh`.
-3. Open a PR with the spec and the YAML change together; merging is the approval. Set status `approved`.
-4. Test in a VM (below). Set status `implemented`.
+Open a pull request. CI checks that the file starts with `#cloud-config` and parses with a single top-level `autoinstall` key. Test in a VM before merging anything that changes what gets installed.
 
 ---
 
@@ -116,7 +92,7 @@ Boot the Ubuntu Desktop 26.04 LTS ISO in a VirtualBox VM (at least 25 GB disk, 4
 
 After installation, verify:
 
-1. All packages in the spec are present
+1. All packages listed in the file are present
 2. Snaps are installed (`snap list`)
 3. UFW is active (`sudo ufw status`)
 4. The user account exists with sudo
