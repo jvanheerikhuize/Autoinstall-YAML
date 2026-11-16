@@ -1,17 +1,15 @@
 # Autoinstall YAML
 
-One [Ubuntu Autoinstall](https://canonical-subiquity.readthedocs-hosted.com/en/latest/reference/autoinstall-reference.html) file that installs a developer laptop unattended, except for the two things that are per machine: **network** and **identity**.
+One [Ubuntu Autoinstall](https://canonical-subiquity.readthedocs-hosted.com/en/latest/reference/autoinstall-reference.html) file that installs a developer laptop unattended, except for the two things that are per machine: **network** and **identity**. The point is that a fresh machine can be rebuilt from a URL without documentation lookup or manual tweaking.
 
 Short URL for the boot prompt: https://tinyurl.com/jvh-autoinstall
 
 Target release is **Ubuntu 26.04 LTS (Resolute Raccoon)**; 24.04 LTS is the minimum. Reference machine: Dell Latitude 5400.
 
 > [!IMPORTANT]
-> As of 2026-11-16 no install has been verified end to end from this file. The `#cloud-config` header required for the deploy path below was only added that day. See [docs/ROADMAP.md](docs/ROADMAP.md).
+> As of 2026-11-16 no install has been verified end to end from this file. Until one is, treat it as untested.
 
-This is **stage 1** of a three-stage machine rebuild. Stage 2 is [dotfiles](https://github.com/jvanheerikhuize/dotfiles) (apps and configuration), stage 3 is [agentic-workspace](https://github.com/jvanheerikhuize/agentic-workspace) (agent tooling). The split, the decisions and the rebuild runbook are in [docs/stateless-laptop-plan.md](docs/stateless-laptop-plan.md).
-
----
+This is **stage 1** of a three-stage machine rebuild. Stage 2 is [dotfiles](https://github.com/jvanheerikhuize/dotfiles) (apps and configuration), stage 3 is [agentic-workspace](https://github.com/jvanheerikhuize/agentic-workspace) (agent tooling). The split, the decisions, the open work and the rebuild runbook are in [PLAN.md](PLAN.md).
 
 ## Quick Deploy
 
@@ -38,17 +36,7 @@ flowchart TD
 
 The file starts with `#cloud-config` and a single top-level `autoinstall:` key. Both are required because the kernel parameter hands the file to cloud-init first, which only accepts payloads that begin with that header.
 
-### One-time URL setup
-
-The short URL points to the raw `Autoinstall.yaml` on `main`. Create it once on [tinyurl.com](https://tinyurl.com); custom aliases are free and never expire.
-
-| Step | Action |
-|------|--------|
-| 1 | Paste `https://raw.githubusercontent.com/jvanheerikhuize/Autoinstall-YAML/main/Autoinstall.yaml` |
-| 2 | Set the alias `jvh-autoinstall` |
-| 3 | Make TinyURL |
-
----
+The short URL points to the raw `Autoinstall.yaml` on `main`. If it ever has to be recreated: on [tinyurl.com](https://tinyurl.com), paste `https://raw.githubusercontent.com/jvanheerikhuize/Autoinstall-YAML/main/Autoinstall.yaml` and set the alias `jvh-autoinstall`.
 
 ## What stage 1 owns
 
@@ -59,51 +47,24 @@ Only what must exist before first login:
 3. UFW enabled, Ubuntu's security snaps (`prompting-client`, `desktop-security-center`)
 4. `git`, `curl`, `wget`, `build-essential` so stage 2 can be fetched
 
-Editors, runtimes and GUI apps belong to stage 2. Items still in this file that violate that rule (`nodejs`, `npm`, the `code` snap, `gufw`) are scheduled to move; see the plan.
+Editors, runtimes and GUI apps belong to stage 2. Items still in this file that violate that rule (`nodejs`, `npm`, the `code` snap, `gufw`) are scheduled to move; see PLAN.md §4.1.
 
----
-
-## Repository Structure
+## Files
 
 ```text
-├── Autoinstall.yaml          # The product; served via TinyURL
-├── PURPOSE.md
-└── docs/
-    ├── ROADMAP.md            # Grounded findings and status
-    └── stateless-laptop-plan.md
+├── Autoinstall.yaml    # The product; served via TinyURL
+├── PLAN.md             # Three-stage rebuild: ownership, decisions, work items, runbook
+└── .github/workflows/validate-autoinstall.yml   # CI: header and top-level key check
 ```
-
----
 
 ## Changing the file
 
-Open a pull request. CI checks that the file starts with `#cloud-config` and parses with a single top-level `autoinstall` key. Test in a VM before merging anything that changes what gets installed.
+Open a pull request. CI checks that the file starts with `#cloud-config` and parses with a single top-level `autoinstall` key. Test in a VM before merging anything that changes what gets installed: boot the Ubuntu Desktop 26.04 LTS ISO in VirtualBox (at least 25 GB disk, 4 GB RAM) with the Quick Deploy kernel parameter, then check that the listed packages and snaps are present, UFW is active, the user has sudo and `sudo vgs` shows an LVM group.
 
----
-
-## Testing
-
-Boot the Ubuntu Desktop 26.04 LTS ISO in a VirtualBox VM (at least 25 GB disk, 4 GB RAM) with the Quick Deploy kernel parameter. VirtualBox is the hypervisor on the reference machine; QEMU and multipass are not installed.
-
-```bash
-# Alternative: serve the YAML over HTTP (file must still start with #cloud-config) and boot with:
-#   autoinstall ds=nocloud-net;s=http://<your-ip>/
-```
-
-After installation, verify:
-
-1. All packages listed in the file are present
-2. Snaps are installed (`snap list`)
-3. UFW is active (`sudo ufw status`)
-4. The user account exists with sudo
-5. LVM is in use (`sudo vgs`)
-
----
+To test a local copy instead of the TinyURL, serve the directory over HTTP (the file must still start with `#cloud-config`) and boot with `autoinstall ds=nocloud-net;s=http://<your-ip>/`.
 
 ## References
 
 1. [Ubuntu Autoinstall Reference](https://canonical-subiquity.readthedocs-hosted.com/en/latest/reference/autoinstall-reference.html)
-2. [Ubuntu Autoinstall Quick Start](https://canonical-subiquity.readthedocs-hosted.com/en/latest/howto/autoinstall-quickstart.html)
-3. [cloud-init and autoinstall interaction](https://canonical-subiquity.readthedocs-hosted.com/en/latest/explanation/cloudinit-autoinstall-interaction.html)
-4. [cloud-init kernel command line (`cloud-config-url`)](https://docs.cloud-init.io/en/latest/explanation/kernel-command-line.html)
-5. [Subiquity on GitHub](https://github.com/canonical/subiquity)
+2. [cloud-init and autoinstall interaction](https://canonical-subiquity.readthedocs-hosted.com/en/latest/explanation/cloudinit-autoinstall-interaction.html)
+3. [cloud-init kernel command line (`cloud-config-url`)](https://docs.cloud-init.io/en/latest/explanation/kernel-command-line.html)
