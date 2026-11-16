@@ -7,7 +7,7 @@
 # Triggers:
 #   1. Manual dispatch with spec file path
 #   2. Push to specs/ directory with approved specs
-#   3. Scheduled processing of specs from configuration file
+#   3. Pull request review submitted
 #
 # Requirements:
 #   - AI API key secret configured (varies by provider)
@@ -63,9 +63,8 @@ on:
       - "specs/api/*.yaml"
       - "specs/api/*.json"
 
-  # Scheduled processing of pending specs
-  schedule:
-    - cron: "0 9 * * 1-5"  # 9 AM UTC, Monday-Friday
+  # No schedule: the former weekday cron never found work and GitHub disabled it for
+  # inactivity (last run 2026-04-27). Use workflow_dispatch instead.
 
   # Trigger via pull request approval
   pull_request_review:
