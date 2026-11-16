@@ -7,6 +7,58 @@
 
 ---
 
+## 0. Re-grounding, 2026-11-16
+
+Everything below §0 is the 2026-07-24 analysis, kept verbatim as the baseline. This
+section records what has changed since and what this pass did about it. Facts were
+re-checked on the reference machine, on GitHub, and against the current subiquity and
+cloud-init documentation.
+
+### 0.1 What changed in the environment
+
+| Fact | July 2026 | November 2026 |
+|------|-----------|---------------|
+| Reference OS | Ubuntu 24.04.4 LTS, kernel 7.0.0-28 | **Ubuntu 26.04.1 LTS (Resolute Raccoon)**, kernel 7.0.0-38, cloud-init 26.2 |
+| Node.js | v20 on the machine, Node 18 in noble apt | **Node 22.22 in resolute apt** and on the machine; the `npm` apt package is removed on the machine |
+| dotfiles repo | visibility **unverified**, remote is SSH | **public**, `install.sh` at root, last push 2026-07-25; `~/Repos/dotfiles` is no longer checked out |
+| `desktop-security-center` snap | not installed | installed (`1/stable`) |
+| `gufw`, `code`, `prompting-client` | not installed | still not installed |
+| Spec Ingestion workflow | last run 2026-04-27 | **`disabled_inactivity`** on GitHub |
+| Local spec validation | impossible (`ajv`, `jsonschema` absent) | **possible**: python3 `jsonschema` 4.19.2 and PyYAML 6.0.3 present; the `yamllint` shim is broken (orphaned venv) |
+| `#cloud-config` header | missing | **still missing on `main`**; added on this branch |
+| `openscad` apt candidate | 2021.01-6build4 (noble) | 2021.01-11 (resolute), still the 2021 release; `openscad-nightly` snap still in use |
+| `arduino` snap | 1.8.19 | 1.8.19, rebuilt 2026-11-11, still the legacy IDE |
+| Subiquity docs | ubuntu.com/server/docs | moved to canonical-subiquity.readthedocs-hosted.com; the quickstart now names 26.04 LTS as current |
+
+The cloud-init requirement behind §2.1 was re-confirmed against the current cloud-init
+documentation: "only cloud config user data starting with `#cloud-config` is supported"
+for `cloud-config-url=`. The subiquity explanation page confirms the shape: header first,
+then a single top-level `autoinstall:` key.
+
+### 0.2 Status of the plan (section 3)
+
+| # | Item | Status 2026-11-16 |
+|---|------|-------------------|
+| 1 | `#cloud-config` header | **Done** on this branch, governed by FEAT-0008 (status `review`) |
+| 2 | One verified VM install | **Open**. Acceptance criteria written as FEAT-0008 AC-002/AC-003; needs a human at the VirtualBox console |
+| 3 | FEAT-0007 dotfiles clone | **Unblocked**: repo is public. Real URL and logging now in the spec and the commented template; still untested, so still commented |
+| 4 | Stage-1/stage-2 ADR | Open; `.ai/decisions/` still holds only the template |
+| 5 | Refresh `.ai/CONTEXT.md` + README | **Done** (CPU, audio, installer, 26.04, Node 22, tests section, dates, status table, Mermaid diagrams) |
+| 6 | CI triggers + local validation | **Done**: cron removed from `spec-ingestion.yml`; `scripts/validate-specs.sh` added (python only, no npm) |
+| 7 | VirtualBox smoke-test script | Open, blocked by 2 |
+| 8 | FEAT-0005 / FEAT-0006 | Grounding notes added to both specs; rewrite or close is still an owner decision |
+| 9 | LUKS via interactive `storage` | Open, owner decision. The reference confirms `storage.layout.password` enables LUKS with the `lvm` layout, so the no-secrets rule still forces the interactive route |
+| 10 | 24.04 vs 26.04 target | **Decided by reality**: the reference machine is on 26.04.1; docs now name 26.04 LTS as target, 24.04 as minimum |
+
+### 0.3 Next exit criterion
+
+Phase 1 is now one step from complete: boot the 26.04 Desktop ISO in VirtualBox with
+the TinyURL parameter (after this branch merges, since the TinyURL serves `main`) and
+record the checklist result under `docs/runbooks/`. Nothing else in this document
+should move before that.
+
+---
+
 ## 1. What this repository actually is
 
 A **version-controlled Ubuntu autoinstall (subiquity) configuration for one specific

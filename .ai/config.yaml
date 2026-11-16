@@ -145,13 +145,13 @@ ai_integrations:
   claude:
     enabled: true
     config_path: ".claude/"  # Claude Code looks for CLAUDE.md here
-    model_preference: "claude-sonnet-4-20250514"
+    model_preference: "claude-opus-5-5"
     api_key_env: "ANTHROPIC_API_KEY"
 
   # Aider (AI pair programming)
   aider:
     enabled: true
-    model_preference: "gpt-4"  # or claude-3-5-sonnet
+    model_preference: "gpt-4"  # or claude-sonnet-5-5
     api_key_env: "OPENAI_API_KEY"  # or ANTHROPIC_API_KEY
 
   # GitHub Copilot

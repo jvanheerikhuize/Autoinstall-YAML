@@ -1,3 +1,7 @@
+# GROUNDING NOTE 2026-11-16: the `arduino` snap (Snapcrafters) is still the legacy 1.8.19
+# IDE; Arduino IDE 2.x is the current line and is not in the Snap Store under that name.
+# The dialout criterion remains valid: the reference user is not in dialout.
+# See docs/ROADMAP.md §2.5.
 # Feature Specification: ESP32 Embedded Development Environment
 # Validate against: specs/schemas/feature-spec.schema.json
 

@@ -1,3 +1,7 @@
+# GROUNDING NOTE 2026-11-16: the apt candidate for openscad on Ubuntu 26.04 is still
+# 2021.01 (2021.01-11), more than five years old. The reference machine runs the
+# openscad-nightly snap (latest/edge, publisher torsten-paul). Rewrite this spec around
+# the snap or close it; see docs/ROADMAP.md §2.5.
 # Feature Specification: OpenSCAD 3D Modeling Environment
 # Validate against: specs/schemas/feature-spec.schema.json
 

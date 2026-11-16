@@ -8,7 +8,7 @@
 |-------|-------|
 | Version | 1.0.0 |
 | Status | Active |
-| Last Updated | 2026-02-24 |
+| Last Updated | 2026-11-16 |
 | Owner | Jerry van Heerikhuize |
 
 ---
@@ -240,7 +240,7 @@ See [PATTERNS.md](PATTERNS.md) for detailed YAML style guidelines. Key rules:
 
 | Technology | Version | Notes |
 |------------|---------|-------|
-| Ubuntu | 24.04 LTS (Noble) | Minimum supported version |
+| Ubuntu | 26.04 LTS (Resolute Raccoon) | Target release; 24.04 LTS (Noble) is the minimum supported version |
 | Subiquity | Bundled with ISO | Autoinstall v1 format |
 | Curtin | Bundled with subiquity | Storage and late-commands executor |
 | LVM | System default | Logical Volume Manager for storage |

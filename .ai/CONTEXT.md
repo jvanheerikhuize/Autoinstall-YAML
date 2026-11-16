@@ -35,7 +35,7 @@
 ### Developer Domains
 | Domain | Tools | Status |
 |--------|-------|--------|
-| JavaScript / Node.js | nodejs, npm, VS Code | Implemented (FEAT-0001) |
+| JavaScript / Node.js | nodejs (22 LTS on 26.04), npm, VS Code | Implemented (FEAT-0001) |
 | 3D modeling / CAD | OpenSCAD | Spec planned (FEAT-0005) |
 | ESP32 / embedded | esptool, python3-serial, minicom, Arduino IDE, dialout group | Spec planned (FEAT-0006) |
 
@@ -43,10 +43,10 @@
 | Component | Detail |
 |-----------|--------|
 | Machine | Dell Inc. Latitude 5400 |
-| CPU | Intel 8th Gen Whiskey Lake (i5-8265U / i7-8665U) |
+| CPU | Intel Core i5-8365U (8th Gen Whiskey Lake) |
 | GPU | Intel UHD Graphics 620 |
 | Wi-Fi | Intel Wireless-AC 9560 (iwlwifi + linux-firmware) |
-| Audio | Realtek ALC256 (requires sof-firmware + alsa-ucm-conf) |
+| Audio | Realtek ALC256 (alsa-ucm-conf; SOF firmware is bundled in linux-firmware, there is no sof-firmware package) |
 | Fingerprint | Broadcom BCM58200 (handled via OEM stack) |
 | Thunderbolt | Thunderbolt 3 (managed by bolt) |
 | Firmware | Dell LVFS support via fwupd + fwupd-signed |
@@ -55,7 +55,7 @@
 | Layer | Technology |
 |-------|------------|
 | Configuration format | YAML (Ubuntu Autoinstall / subiquity) |
-| Installer | Ubuntu subiquity (24.04 LTS+) |
+| Installer | Ubuntu subiquity / Desktop installer, cloud-init delivery (target 26.04 LTS, minimum 24.04 LTS) |
 | Storage backend | curtin (via `curtin in-target`) |
 | Package management | APT + Snap |
 | Spec format | YAML (feature-spec.schema.json) |
@@ -68,16 +68,22 @@
 ### Active Work
 - [x] FEAT-0001: Ubuntu Developer Workstation Autoinstall — approved, implemented in Autoinstall.yaml
 - [x] FEAT-0004: Automated Locale, Keyboard, Timezone — approved, implemented in Autoinstall.yaml
-- [ ] FEAT-0005: OpenSCAD Environment — draft, pending approval
-- [ ] FEAT-0006: ESP32 Development Environment — draft, pending approval
+- [ ] FEAT-0005: OpenSCAD Environment — draft, premise outdated (see grounding note in the spec)
+- [ ] FEAT-0006: ESP32 Development Environment — draft, package choices need revisiting
+- [ ] FEAT-0007: Dotfiles Provisioning — draft, premise now holds (repo is public)
+- [ ] FEAT-0008: Deployable via cloud-init + verified install — review (P0 fix, header applied)
 
 ### Recent Changes
+- 2026-11-16: Re-grounded against the reference machine (now Ubuntu 26.04.1 LTS) and current docs; added the `#cloud-config` header (FEAT-0008), local spec validator, removed dead cron trigger
+- 2026-07-24: Grounded improvement plan and roadmap (docs/ROADMAP.md)
 - 2026-02-24: Implemented Autoinstall.yaml from FEAT-0001 (base workstation) and FEAT-0004 (locale/timezone)
 - 2026-02-24: Added Dell Latitude 5400 hardware support packages (AC-016–AC-020)
 - 2026-02-24: Added Node.js/npm (AC-021), OpenSCAD spec (FEAT-0005), ESP32 spec (FEAT-0006)
 
 ### Known Issues
+- No install has yet been verified end to end (FEAT-0008 AC-002/AC-003 open)
 - FEAT-0005 and FEAT-0006 are in draft — review and approve before implementing
+- The reference machine was not provisioned from this config; use it only as a fact source
 
 ---
 
@@ -195,9 +201,10 @@ specs.config.yaml              # Central spec registry
 
 ### Test Locations
 ```
-tests/
-└── (to be defined when FEAT-0001 is implemented)
+scripts/
+└── validate-specs.sh      # Local schema + lint check for specs (python3, PyYAML, jsonschema)
 ```
+No VM harness exists yet. VirtualBox is the only hypervisor on the reference machine (no QEMU, multipass or cloud-localds); see docs/ROADMAP.md item 7.
 
 ---
 
@@ -206,8 +213,8 @@ tests/
 ### Prerequisites
 ```bash
 # To test autoinstall YAML in a VM
-qemu-system-x86_64  # or VirtualBox / VMware
-# Ubuntu Desktop ISO (24.04 LTS or later)
+VBoxManage          # VirtualBox is what the reference machine has; QEMU is absent
+# Ubuntu Desktop ISO (26.04 LTS target; 24.04 LTS minimum)
 # A machine or VM with at least 25 GB disk and 4 GB RAM
 ```
 
@@ -285,7 +292,7 @@ cat specs/features/FEAT-0001-ubuntu-developer-workstation.yaml
 
 | Field | Value |
 |-------|-------|
-| Last Updated | 2026-02-24 |
+| Last Updated | 2026-11-16 |
 | Update Frequency | After each spec is implemented or project state changes |
 | Owner | Jerry van Heerikhuize |
 
