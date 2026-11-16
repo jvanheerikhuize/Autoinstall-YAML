@@ -1,243 +1,109 @@
 # Autoinstall YAML
 
-Reproducible, spec-driven **Ubuntu autoinstall configurations** for developer workstations.
+One [Ubuntu Autoinstall](https://canonical-subiquity.readthedocs-hosted.com/en/latest/reference/autoinstall-reference.html) file that installs a developer laptop unattended, except for the two things that are per machine: **network** and **identity**.
 
-https://tinyurl.com/jvh-autoinstall
+Short URL for the boot prompt: https://tinyurl.com/jvh-autoinstall
 
-This repository contains version-controlled [Ubuntu Autoinstall](https://ubuntu.com/server/docs/install/autoinstall-reference) (subiquity) YAML files that provision a developer workstation consistently and without manual intervention — except for the two things that must be per-machine: **network configuration** and **user identity**.
+Target release is **Ubuntu 26.04 LTS (Resolute Raccoon)**; 24.04 LTS is the minimum. Reference machine: Dell Latitude 5400.
 
-Changes to the configuration are governed by a **spec-based development workflow**: every modification starts with a formal feature specification that must be reviewed and approved before it is implemented.
+> [!IMPORTANT]
+> As of 2026-11-16 no install has been verified end to end from this file. The `#cloud-config` header required for the deploy path below was only added that day. See [docs/ROADMAP.md](docs/ROADMAP.md).
+
+This is **stage 1** of a three-stage machine rebuild. Stage 2 is [dotfiles](https://github.com/jvanheerikhuize/dotfiles) (apps and configuration), stage 3 is [agentic-workspace](https://github.com/jvanheerikhuize/agentic-workspace) (agent tooling). The split, the decisions and the rebuild runbook are in [docs/stateless-laptop-plan.md](docs/stateless-laptop-plan.md).
 
 ---
 
 ## Quick Deploy
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│                                                                  │
-│   Boot Ubuntu Desktop ISO                                        │
-│   Press  e  to edit the GRUB entry                               │
-│   Find the line starting with  linux                             │
-│   Append to the end of that line:                                │
-│                                                                  │
-│   autoinstall cloud-config-url=https://tinyurl.com/jvh-autoinstall   │
-│                                                                  │
-│   Press  F10  to boot                                            │
-│                                                                  │
-└──────────────────────────────────────────────────────────────────┘
+1. Boot the Ubuntu Desktop ISO.
+2. Press `e` to edit the GRUB entry.
+3. Find the line starting with `linux` and append to the end of it:
+
+```text
+autoinstall cloud-config-url=https://tinyurl.com/jvh-autoinstall
 ```
 
-> [!NOTE]
-> The installer fetches the config from the TinyURL above, pauses for **network** and **identity**, then runs completely unattended until reboot.
+4. Press `F10` to boot.
 
----
+```mermaid
+flowchart TD
+    boot["Boot ISO with kernel parameter"] --> fetch["cloud-init fetches Autoinstall.yaml via TinyURL (GitHub raw)"]
+    fetch --> net["Network (you act)"]
+    fetch --> id["Identity: hostname + user (you act)"]
+    net --> auto
+    id --> auto
+    auto["Fully automated: minimal desktop, LVM storage, hardware enablement, UFW, drivers + codecs, all updates"]
+    auto --> reboot["Reboot, log in"]
+```
+
+The file starts with `#cloud-config` and a single top-level `autoinstall:` key. Both are required because the kernel parameter hands the file to cloud-init first, which only accepts payloads that begin with that header.
 
 ### One-time URL setup
 
-The short URL points to the raw `Autoinstall.yaml` file in this repository. Create it once on [tinyurl.com](https://tinyurl.com) — it never expires:
+The short URL points to the raw `Autoinstall.yaml` on `main`. Create it once on [tinyurl.com](https://tinyurl.com); custom aliases are free and never expire.
 
 | Step | Action |
 |------|--------|
-| 1 | Go to **[tinyurl.com](https://tinyurl.com)** |
-| 2 | Paste the long URL: `https://raw.githubusercontent.com/jvanheerikhuize/Autoinstall-YAML/main/Autoinstall.yaml` |
-| 3 | Set a custom alias (e.g. `jvh-autoinstall`) |
-| 4 | Click **Make TinyURL** |
-| 5 | ✓ Done — alias is `jvh-autoinstall` |
-
-> [!TIP]
-> TinyURL custom links are free, require no account, and never expire. Use something memorable — you'll type or paste this at the boot prompt.
+| 1 | Paste `https://raw.githubusercontent.com/jvanheerikhuize/Autoinstall-YAML/main/Autoinstall.yaml` |
+| 2 | Set the alias `jvh-autoinstall` |
+| 3 | Make TinyURL |
 
 ---
 
-### What happens after you boot
+## What stage 1 owns
 
-```
-  Boot ISO + kernel parameter
-           │
-           ▼
-  Installer fetches Autoinstall.yaml
-  from your TinyURL → GitHub raw
-           │
-     ┌─────▼─────┐    ┌─────────────────┐
-     │  Network  │    │    Identity      │
-     │ (you act) │    │ hostname + user  │
-     │           │    │   (you act)      │
-     └─────┬─────┘    └────────┬────────┘
-           └──────────────────┘
-                    │
-                    ▼
-         ┌──────────────────────┐
-         │  Fully automated:    │
-         │  · minimal desktop   │
-         │  · LVM storage       │
-         │  · dev packages      │
-         │  · VS Code snap      │
-         │  · UFW firewall      │
-         │  · drivers + codecs  │
-         │  · all updates       │
-         └──────────┬───────────┘
-                    │
-                    ▼
-           Reboot → log in
+Only what must exist before first login:
 
-```
+1. `ubuntu-desktop-minimal` base, LVM layout, all updates, drivers and codecs
+2. Latitude 5400 hardware enablement: `intel-microcode`, `thermald`, `alsa-ucm-conf`, `bolt`, `fwupd-signed`
+3. UFW enabled, Ubuntu's security snaps (`prompting-client`, `desktop-security-center`)
+4. `git`, `curl`, `wget`, `build-essential` so stage 2 can be fetched
 
----
-
-## How It Works
-
-```
-Boot Ubuntu ISO  →  Network config (interactive)  →  Identity config (interactive)
-        ↓
-Automated installation:
-  • ubuntu-desktop-minimal base
-  • LVM storage layout
-  • Developer packages (git, curl, build-essential, …)
-  • VS Code (snap)
-  • UFW firewall enabled
-  • Third-party drivers + codecs
-  • All updates applied
-        ↓
-Machine reboots  →  Ready to log in
-```
+Editors, runtimes and GUI apps belong to stage 2. Items still in this file that violate that rule (`nodejs`, `npm`, the `code` snap, `gufw`) are scheduled to move; see the plan.
 
 ---
 
 ## Repository Structure
 
-```
-├── Autoinstall.yaml                # Active configuration — also served via TinyURL for quick deploy
-│
-├── specs/
-│   ├── features/
-│   │   ├── FEAT-0001-ubuntu-developer-workstation.yaml  # approved — base workstation config
-│   │   ├── FEAT-0004-automated-locale-timezone.yaml     # approved — locale/keyboard/timezone
-│   │   ├── FEAT-0005-openscad-environment.yaml          # draft — OpenSCAD 3D modeling
-│   │   ├── FEAT-0006-esp32-development-environment.yaml # draft — ESP32 toolchain
-│   │   └── _template.yaml                               # Template for new specs
-│   └── schemas/
-│       └── feature-spec.schema.json                     # Spec validation schema
-│
-├── specs.config.yaml               # Central spec registry
-│
-├── .ai/                            # AI assistant context
-│   ├── CONTEXT.md                  # Project context (AI starts here)
-│   ├── config.yaml                 # AI behavior configuration
-│   ├── specs/SPEC.md               # Product specification
-│   └── architecture/
-│       ├── ARCHITECTURE.md         # How the autoinstall system is structured
-│       └── PATTERNS.md             # YAML conventions
-│
-├── .claude/
-│   └── CLAUDE.md                   # Claude Code instructions
-│
-├── docs/
-│   ├── spec-based-development.md   # Spec workflow guide
-│   └── runbooks/                   # Operational procedures
-│
-└── scripts/
-    ├── ingest-spec.sh              # Bash: process a spec with an AI CLI
-    └── Invoke-SpecIngestion.ps1    # PowerShell: same, for Windows
+```text
+├── Autoinstall.yaml          # The product; served via TinyURL
+├── PURPOSE.md
+└── docs/
+    ├── ROADMAP.md            # Grounded findings and status
+    └── stateless-laptop-plan.md
 ```
 
 ---
 
-## Current Status
+## Changing the file
 
-| Spec | Title | Status |
-|------|-------|--------|
-| [FEAT-0001](specs/features/FEAT-0001-ubuntu-developer-workstation.yaml) | Ubuntu Developer Workstation Autoinstall | approved |
-| [FEAT-0004](specs/features/FEAT-0004-automated-locale-timezone.yaml) | Automated Locale, Keyboard, and Timezone | approved |
-| [FEAT-0005](specs/features/FEAT-0005-openscad-environment.yaml) | OpenSCAD 3D Modeling Environment | draft |
-| [FEAT-0006](specs/features/FEAT-0006-esp32-development-environment.yaml) | ESP32 Embedded Development Environment | draft |
-
-> `Autoinstall.yaml` is active and implements all approved specs (FEAT-0001, FEAT-0004).
+Open a pull request. CI checks that the file starts with `#cloud-config` and parses with a single top-level `autoinstall` key. Test in a VM before merging anything that changes what gets installed.
 
 ---
 
-## Spec-Based Workflow
+## Testing
 
-All changes to the autoinstall configuration follow this process:
-
-```
-1. Draft a spec in specs/features/FEAT-XXXX-<name>.yaml
-2. Submit for review → set status: review
-3. Approve → set status: approved
-4. Implement → create/update Autoinstall.yaml
-5. Test in a VM
-6. Merge → set status: implemented
-```
-
-### Creating a New Spec
-
-Copy the template and fill in the required fields:
+Boot the Ubuntu Desktop 26.04 LTS ISO in a VirtualBox VM (at least 25 GB disk, 4 GB RAM) with the Quick Deploy kernel parameter. VirtualBox is the hypervisor on the reference machine; QEMU and multipass are not installed.
 
 ```bash
-cp specs/features/_template.yaml specs/features/FEAT-0002-my-feature.yaml
-```
-
-Required fields: `metadata.id`, `metadata.title`, `metadata.version`, `metadata.status`, `description.summary`, `description.problem_statement`, `description.proposed_solution`, and at least one entry in `acceptance_criteria`.
-
-### Implementing a Spec (AI-assisted)
-
-```bash
-# Bash/Unix — process an approved spec with AI
-./scripts/ingest-spec.sh specs/features/FEAT-0001-ubuntu-developer-workstation.yaml
-
-# PowerShell — same, for Windows
-./scripts/Invoke-SpecIngestion.ps1 -SpecFile specs/features/FEAT-0001-ubuntu-developer-workstation.yaml
-```
-
----
-
-## Testing the Autoinstall YAML
-
-The recommended way to test is to boot an Ubuntu Desktop ISO in a virtual machine and use the TinyURL kernel parameter from the Quick Deploy section above.
-
-```bash
-# Example: serve the YAML over HTTP and boot with:
+# Alternative: serve the YAML over HTTP (file must still start with #cloud-config) and boot with:
 #   autoinstall ds=nocloud-net;s=http://<your-ip>/
 ```
 
 After installation, verify:
-- All packages in the spec are present
-- Snaps are installed (`snap list`)
-- UFW is active (`sudo ufw status`)
-- User account exists with sudo
-- Machine was configured with LVM (`sudo vgs`)
 
----
-
-## AI Assistant Setup
-
-This repository is configured for AI-assisted development. Any AI coding assistant can use the context in `.ai/`:
-
-| File | Purpose |
-|------|---------|
-| [.ai/CONTEXT.md](.ai/CONTEXT.md) | Project overview — AI reads this first |
-| [.ai/specs/SPEC.md](.ai/specs/SPEC.md) | Product specification |
-| [.ai/architecture/ARCHITECTURE.md](.ai/architecture/ARCHITECTURE.md) | How the autoinstall system is structured |
-| [.ai/architecture/PATTERNS.md](.ai/architecture/PATTERNS.md) | YAML conventions |
-| [.ai/config.yaml](.ai/config.yaml) | AI behavior preferences |
-
-Claude Code users: the `.claude/CLAUDE.md` file is auto-loaded and instructs Claude to read these context files first.
-
----
-
-## Author
-
-**Jerry van Heerikhuize** ([@jvanheerikhuize](https://github.com/jvanheerikhuize))
+1. All packages listed in the file are present
+2. Snaps are installed (`snap list`)
+3. UFW is active (`sudo ufw status`)
+4. The user account exists with sudo
+5. LVM is in use (`sudo vgs`)
 
 ---
 
 ## References
 
-- [Ubuntu Autoinstall Reference](https://ubuntu.com/server/docs/install/autoinstall-reference)
-- [Ubuntu Autoinstall Quick Start](https://ubuntu.com/server/docs/install/autoinstall-quickstart)
-- [Subiquity on GitHub](https://github.com/canonical/subiquity)
-
-## Roadmap
-
-Roadmap tracked in [branch: TinyURL system + CI validation](https://github.com/jvanheerikhuize/Autoinstall-YAML). See commits for current progress.
-
----
+1. [Ubuntu Autoinstall Reference](https://canonical-subiquity.readthedocs-hosted.com/en/latest/reference/autoinstall-reference.html)
+2. [Ubuntu Autoinstall Quick Start](https://canonical-subiquity.readthedocs-hosted.com/en/latest/howto/autoinstall-quickstart.html)
+3. [cloud-init and autoinstall interaction](https://canonical-subiquity.readthedocs-hosted.com/en/latest/explanation/cloudinit-autoinstall-interaction.html)
+4. [cloud-init kernel command line (`cloud-config-url`)](https://docs.cloud-init.io/en/latest/explanation/kernel-command-line.html)
+5. [Subiquity on GitHub](https://github.com/canonical/subiquity)
