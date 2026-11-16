@@ -42,15 +42,24 @@ then a single top-level `autoinstall:` key.
 | 1 | `#cloud-config` header | **Done** on this branch, governed by FEAT-0008 (status `review`) |
 | 2 | One verified VM install | **Open**. Acceptance criteria written as FEAT-0008 AC-002/AC-003; needs a human at the VirtualBox console |
 | 3 | FEAT-0007 dotfiles clone | **Unblocked**: repo is public. Real URL and logging now in the spec and the commented template; still untested, so still commented |
-| 4 | Stage-1/stage-2 ADR | Open; `.ai/decisions/` still holds only the template |
-| 5 | Refresh `.ai/CONTEXT.md` + README | **Done** (CPU, audio, installer, 26.04, Node 22, tests section, dates, status table, Mermaid diagrams) |
+| 4 | Stage-1/stage-2 ADR | **Done** as the ownership table in `docs/stateless-laptop-plan.md` §1 |
+| 5 | Refresh `.ai/CONTEXT.md` + README | **Done**, then `.ai/` removed entirely (§0.3); README rewritten |
 | 6 | CI triggers + local validation | **Done**: cron removed from `spec-ingestion.yml`; `scripts/validate-specs.sh` added (python only, no npm) |
 | 7 | VirtualBox smoke-test script | Open, blocked by 2 |
 | 8 | FEAT-0005 / FEAT-0006 | Grounding notes added to both specs; rewrite or close is still an owner decision |
 | 9 | LUKS via interactive `storage` | Open, owner decision. The reference confirms `storage.layout.password` enables LUKS with the `lvm` layout, so the no-secrets rule still forces the interactive route |
 | 10 | 24.04 vs 26.04 target | **Decided by reality**: the reference machine is on 26.04.1; docs now name 26.04 LTS as target, 24.04 as minimum |
 
-### 0.3 Next exit criterion
+### 0.3 Repository decluttered (same day)
+
+The template layer that came with the repository was removed: `.ai/`, `.claude/`, `memory/`,
+`AGENTS.md`, the integration and ingestion workflows and scripts, the issue and PR templates,
+`specs.config.yaml`, `specs/api/`, `docs/runbooks/`, `docs/integrations.md`,
+`docs/spec-based-development.md`, `CONTRIBUTING.md` and `SECURITY.md`. References to those
+paths in §2 below are historical. The spec workflow itself (specs, schema, validator, CI) stays.
+Agent configuration for this workspace lives in the `agentic-workspace` repository only.
+
+### 0.4 Next exit criterion
 
 Phase 1 is now one step from complete: boot the 26.04 Desktop ISO in VirtualBox with
 the TinyURL parameter (after this branch merges, since the TinyURL serves `main`) and
