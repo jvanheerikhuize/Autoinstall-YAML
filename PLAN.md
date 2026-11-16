@@ -2,6 +2,8 @@
 
 > Written 2026-11-16 from a scan of the reference machine (Dell Latitude 5400, Ubuntu 26.04.1 LTS)
 > and the three repositories involved. Decisions in §2 were made by the owner on the same day.
+> Status: no install has yet been verified end to end from `Autoinstall.yaml`; that is item A1 and
+> gates everything else.
 > Goal: a clean machine is installed and fully usable with one boot parameter, two clones and one
 > secrets step. Nothing on the laptop is precious; everything precious has a home elsewhere.
 
@@ -137,7 +139,7 @@ Gemini config, git ignore, `workspace-audit.timer`.
 |------|------|----------------|
 | `~/.ssh/id_ed25519` | password manager or an offline USB | stage 0: restore, `chmod 600`, `ssh -T git@github.com` |
 | GitHub auth | `gh auth login` | stage 0 |
-| `~/Repos` (26 directories, 4 without a remote) | GitHub | `gh repo list jvanheerikhuize --limit 200` or a committed `repos.txt`; `git clone` loop. The 4 directories without a remote (`asdlc`, `website`, `tinydesktopgame`, `makersbordjes`, see `~/ROADMAP.md`) must get a remote or be declared disposable |
+| `~/Repos` (26 directories, 4 without a remote) | GitHub | `gh repo list jvanheerikhuize --limit 200` or a committed `repos.txt`; `git clone` loop. The 4 directories without a remote (`asdlc`, `website`, `tinydesktopgame`, `makersbordjes`) must get a remote or be declared disposable |
 | `~/Documents`, `~/Pictures` | Google Drive via `rclone` | `rclone bisync`; the `fluhus/gnome-googledrive` PPA goes |
 | `~/.ollama` models | Ollama registry | pulled from the list in stage 3 |
 | `~/.config/rclone/rclone.conf` | contains tokens: treat as a secret, store with the SSH key | stage 0 |
@@ -165,12 +167,12 @@ are repos, synced folders and ollama models.
 
 | # | Item | Note |
 |---|------|------|
-| A1 | Merge PR #5 (header), run the VirtualBox install, record it under `docs/` | gate for everything else |
+| A1 | Run the VirtualBox install from the TinyURL, record the result in the README | gate for everything else |
 | A2 | Add `flatpak` to `packages`, add Flathub remote in `late-commands` (`flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo`) | decision D3 |
 | A3 | Add `gh` to `packages` | stage 0 needs it |
 | A4 | Remove `nodejs`, `npm`, `gufw`, the `code` snap | ownership rule §1 |
 | A5 | Decide LUKS: add `storage` to `interactive-sections` | owner decision |
-| A6 | OpenSCAD and the ESP32 toolchain are stage 2 concerns: OpenSCAD as Flatpak, ESP32 as a dotfiles profile `embedded` | spec hygiene |
+| A6 | OpenSCAD and the ESP32 toolchain are stage 2 concerns: OpenSCAD as Flatpak, ESP32 as a dotfiles profile `embedded` | nothing to do here |
 
 ### 4.2 dotfiles (stage 2)
 
@@ -183,7 +185,7 @@ are repos, synced folders and ollama models.
 | B5 | Add `dconf.ini` export/import, `~/.config/alacritty`, `starship.toml`, Nerd Font install |
 | B6 | Add vendor repo handling for VS Code and VirtualBox only; remove Chrome and Signal repos (Flatpak) |
 | B7 | Add profile `embedded` (adb, fastboot, arm-none-eabi toolchain, `esptool`, `python3-serial`, `minicom`, `dialout` group) |
-| B8 | Refresh `docs/MACHINE-INVENTORY.md` from §3 |
+| B8 | Keep `docs/TRIAGE.md` in sync with §3 |
 
 ### 4.3 agentic-workspace (stage 3)
 

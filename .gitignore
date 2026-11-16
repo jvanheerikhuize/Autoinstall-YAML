@@ -1,26 +1,2 @@
-# Secrets
-.env
-.env.*
-*.pem
-*.key
-secrets/
-
-# Python bytecode (validator)
-__pycache__/
-*.pyc
-
-# Editor / OS cruft
-*.swp
-*.swo
-*~
-.idea/
-.vscode/
-.DS_Store
-
-# Temporary files
-tmp/
-*.tmp
-*.bak
-
-# Agent working directories
 .claude/
+*.bak
