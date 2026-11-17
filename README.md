@@ -7,7 +7,7 @@ Short URL for the boot prompt: https://tinyurl.com/jvh-autoinstall
 Target release is **Ubuntu 26.04 LTS (Resolute Raccoon)**; 24.04 LTS is the minimum. Reference machine: Dell Latitude 5400.
 
 > [!NOTE]
-> Verified end to end on 2026-11-16 with Ubuntu 26.04.1 Desktop in VirtualBox. See [Verification record](#verification-record).
+> Verified end to end on 2026-11-18 with Ubuntu 26.04.1 Desktop in VirtualBox, together with stage 2 (dotfiles). See [Verification record](#verification-record).
 
 This is **stage 1** of a three-stage machine rebuild. Stage 2 is [dotfiles](https://github.com/jvanheerikhuize/dotfiles) (apps and configuration), stage 3 is [agentic-workspace](https://github.com/jvanheerikhuize/agentic-workspace) (agent tooling). The split, the decisions, the open work and the rebuild runbook are in [PLAN.md](PLAN.md).
 
@@ -64,20 +64,22 @@ To test a local copy instead of the TinyURL, serve the directory over HTTP (the 
 
 ## Verification record
 
-Last verified run: **2026-11-17** (full re-run on a fresh disk; first run 2026-11-16), Ubuntu 26.04.1 LTS Desktop ISO, VirtualBox 7.2 (Ubuntu archive build), 4 GB RAM, 30 GB disk, NAT network, file fetched through the TinyURL. The `gh` package was added after this run.
+Last verified run: **2026-11-18** (clean run on a fresh 40 GB disk, file from `main` through the TinyURL, followed by dotfiles `install.sh --profile dev --non-interactive`; earlier runs 2026-11-16 and 2026-11-17), Ubuntu 26.04.1 LTS Desktop ISO, VirtualBox 7.2 (Ubuntu archive build), 4 GB RAM, NAT network. The install took 41 minutes, stage 2 another 14.
 
 | Check | Result |
 | :--- | :--- |
 | cloud-init fetched the file and the installer skipped language, keyboard, layout, storage and app screens | pass |
 | Screens that still asked for input | Internet connection, Create your account, Ready to install |
-| All 13 `packages` entries installed (`dpkg -s`) | pass |
+| All 12 `packages` entries installed, including `gh` (`dpkg -s`) | pass |
+| `nodejs`, `gufw` and the `code` snap absent after stage 1 (owned by stage 2) | pass |
 | Snaps `prompting-client`, `desktop-security-center` present (`snap list`) | pass |
 | `ufw status` is active (late command) | pass |
 | User is in `sudo`; `sudo vgs` shows `ubuntu-vg` | pass |
-| Root volume uses the whole volume group (`sudo vgs` shows 0 free) | pass on 2026-11-17 (26.95 GB); failed on 2026-11-16 before `sizing-policy: all` |
+| Root volume uses the whole volume group (`sudo vgs` shows 0 free) | pass (36.95 GB of a 40 GB disk); failed on 2026-11-16 before `sizing-policy: all` |
 | Timezone Europe/Amsterdam, locale en_US.UTF-8, keyboard us | pass |
 | All updates applied (`apt list --upgradable` empty after first boot) | pass |
 | Restart ejects the medium and boots the installed system | pass, after the guest asks to remove the medium and press Enter |
+| Stage 2 on top: dotfiles `--profile dev` exits 0, all packages, Flatpaks, custom steps, links and GNOME settings present; a second run installs nothing | pass (see the dotfiles README) |
 
 Findings from these runs:
 
