@@ -44,7 +44,7 @@ Only what must exist before first login:
 1. `ubuntu-desktop-minimal` base, LVM layout, all updates, drivers and codecs
 2. Latitude 5400 hardware enablement: `intel-microcode`, `thermald`, `alsa-ucm-conf`, `bolt`, `fwupd-signed`
 3. UFW enabled, Ubuntu's security snaps (`prompting-client`, `desktop-security-center`)
-4. `git`, `curl`, `wget`, `build-essential` so stage 2 can be fetched
+4. `git`, `gh`, `curl`, `wget`, `build-essential` so stage 2 can be fetched and GitHub auth works on first login
 
 Editors, runtimes and GUI apps belong to stage 2. Items still in this file that violate that rule (`nodejs`, `npm`, the `code` snap, `gufw`) are scheduled to move; see PLAN.md §4.1.
 
@@ -87,7 +87,7 @@ Findings from that run:
 Checklist for the next run, from a terminal in the installed system:
 
 ```bash
-for p in git curl wget build-essential ca-certificates gnupg gufw intel-microcode thermald alsa-ucm-conf bolt fwupd-signed nodejs npm; do dpkg -s "$p" >/dev/null 2>&1 && echo "OK $p" || echo "MISSING $p"; done
+for p in git gh curl wget build-essential ca-certificates gnupg gufw intel-microcode thermald alsa-ucm-conf bolt fwupd-signed nodejs npm; do dpkg -s "$p" >/dev/null 2>&1 && echo "OK $p" || echo "MISSING $p"; done
 snap list | awk 'NR>1{print $1}'
 id -nG | tr ' ' '\n' | grep -x sudo
 sudo ufw status | head -1
