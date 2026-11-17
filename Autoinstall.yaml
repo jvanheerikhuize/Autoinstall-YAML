@@ -41,6 +41,7 @@ autoinstall:
   packages:
     # Developer base
     - git
+    - gh          # GitHub CLI; first-login auth and clone list need it
     - curl
     - wget
     - build-essential

@@ -29,7 +29,7 @@ flowchart TD
 | Stage | Owns | Does not own |
 |-------|------|--------------|
 | 1 Autoinstall-YAML | What must exist before first login: base image, kernel/firmware/hardware enablement, storage layout, UFW, `git`/`curl`/`gh`, `flatpak` + Flathub remote, Ubuntu's own security snaps | Editors, runtimes, GUI apps, shell config |
-| 2 dotfiles | Everything a user sees: bash + starship, CLI tools, Flatpak apps, the few vendor apt repos, GNOME/dconf settings, fonts | Agent tooling, hardware |
+| 2 dotfiles | Everything a user sees: bash, CLI tools, Flatpak apps, the few vendor apt repos, GNOME/dconf settings, fonts | Agent tooling, hardware |
 | 3 agentic-workspace | AI CLIs (`claude`, `gemini-cli`, `agy`, `kimi`), `~/.agents`, hooks, directives, systemd user timers, `ollama` and its model list | Anything a non-agent user needs |
 | 4 data | A list of repos to clone, rclone remotes, folders that sync | Anything that is only on this disk |
 
@@ -43,7 +43,7 @@ and the `code` snap are in both stage 1 and stage 2; they move to stage 2 only.
 | # | Decision | Choice | Consequence |
 |---|----------|--------|-------------|
 | D1 | Base OS | **Ubuntu 26.04 LTS**, autoinstall | Stage 1 stays as is; see §6 for the distribution comparison |
-| D2 | Shell | **bash + starship** | dotfiles keeps `.bashrc`, `.bash_aliases`, `.bash_profile`; the orphaned `~/.zshrc` and `~/.config/fish` are dropped; starship installed from its release binary, not cargo |
+| D2 | Shell | **bash** (starship dropped 2026-11-17) | dotfiles keeps `.bashrc`, `.bash_aliases`, `.bash_profile`; the orphaned `~/.zshrc` and `~/.config/fish` are dropped |
 | D3 | GUI packaging | **Flatpak-first** | Stage 1 installs `flatpak` and adds Flathub; stage 2 lists Flatpak IDs; snaps shrink to Ubuntu's own (Firefox, security center, firmware updater); vendor apt repos kept only where Flatpak is wrong (VS Code, VirtualBox) |
 | D4 | Personal state | **Git-first + one secrets step** | Rebuild = restore one SSH key, `gh auth login`, clone list, rclone sync, `ollama pull` list; no disk image backup |
 
@@ -75,12 +75,14 @@ Leaves stage 1: `nodejs`, `npm`, `code` snap, `gufw` (GUI, S2).
 
 ### 3.2 Stage 2 (dotfiles, profile `dev` extends `desktop` extends `base`)
 
+Superseded on 2026-11-17 by the owner's triage in dotfiles `docs/TRIAGE.md`, which says per item
+whether it is adopted and where it lives. The list below is the original proposal.
+
 CLI (apt unless noted):
 
 | Item | Note |
 |------|------|
 | `bat`, `fd-find`, `fzf`, `zoxide`, `ripgrep`, `eza`, `duf`, `ncdu`, `jq`, `tree`, `xclip` | `ripgrep` and `eza` from apt, not cargo |
-| `starship` | release binary via its install script, pinned version |
 | `shellcheck`, `nmap`, `tshark`, `nvme-cli`, `smartmontools`, `lm-sensors`, `powertop`, `mesa-utils`, `vainfo` | diagnostics |
 | `rclone`, `rsync`, `zip`, `unzip` | S4 depends on `rclone` |
 | `ffmpeg`, `handbrake-cli` | media CLI |
@@ -89,10 +91,10 @@ CLI (apt unless noted):
 | `python3-pip`, `python3-venv`, `python3-dev` | |
 | `php-cli`, `php-gd` | keep only if still used; flag |
 | `alacritty` | apt (in 26.04), replaces the classic snap |
-| `fonts-firacode` + Nerd Font for starship | fonts into `~/.local/share/fonts` |
+| `fonts-firacode` | apt |
 | `gnome-tweaks`, `dconf-editor`, `gparted`, `pavucontrol`, `gnome-shell-extension-manager` | GNOME |
 | dconf dump of `/org/gnome/` (dock, tiling-assistant, keybindings, dark mode) | **add**: `dotfiles/dconf.ini` loaded on install |
-| `~/.config/alacritty`, `~/.config/git`, `~/.gitconfig`, `~/.config/starship.toml` | dotfiles proper |
+| `~/.config/alacritty`, `~/.config/git`, `~/.gitconfig` | dotfiles proper |
 
 GUI as Flatpak (Flathub IDs):
 
@@ -180,9 +182,9 @@ are repos, synced folders and ollama models.
 |---|------|
 | B1 | README is stale: it describes `provision.sh` and profiles `workstation/minimal/server`; the code has `install.sh` and `base/desktop/dev/server`. Fix. |
 | B2 | Add Flatpak support in `src/packages.sh` if incomplete, and fill `flatpak:` lists per §3.2 |
-| B3 | Replace cargo-built tools with apt (`ripgrep`, `eza`) and starship's release binary |
+| B3 | Replace cargo-built tools with apt (`eza`; done 2026-11-17) |
 | B4 | Drop `docker.io`/`docker-compose` from `dev` (not installed today, no Docker on this host by policy) and the pinned `gh` deb (stage 1 has it) |
-| B5 | Add `dconf.ini` export/import, `~/.config/alacritty`, `starship.toml`, Nerd Font install |
+| B5 | Add `dconf.ini` export/import and `~/.config/alacritty` (done 2026-11-17, dotfiles PR #25) |
 | B6 | Add vendor repo handling for VS Code and VirtualBox only; remove Chrome and Signal repos (Flatpak) |
 | B7 | Add profile `embedded` (adb, fastboot, arm-none-eabi toolchain, `esptool`, `python3-serial`, `minicom`, `dialout` group) |
 | B8 | Keep `docs/TRIAGE.md` in sync with §3 |
