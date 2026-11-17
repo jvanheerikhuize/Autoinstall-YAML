@@ -64,7 +64,7 @@ To test a local copy instead of the TinyURL, serve the directory over HTTP (the 
 
 ## Verification record
 
-Last verified run: **2026-11-16**, Ubuntu 26.04.1 LTS Desktop ISO, VirtualBox 7.2 (Ubuntu archive build), 4 GB RAM, 30 GB disk, NAT network, file fetched through the TinyURL.
+Last verified run: **2026-11-17** (full re-run on a fresh disk; first run 2026-11-16), Ubuntu 26.04.1 LTS Desktop ISO, VirtualBox 7.2 (Ubuntu archive build), 4 GB RAM, 30 GB disk, NAT network, file fetched through the TinyURL. The `gh` package was added after this run.
 
 | Check | Result |
 | :--- | :--- |
@@ -74,13 +74,14 @@ Last verified run: **2026-11-16**, Ubuntu 26.04.1 LTS Desktop ISO, VirtualBox 7.
 | Snaps `code`, `prompting-client`, `desktop-security-center` present (`snap list`) | pass |
 | `ufw status` is active (late command) | pass |
 | User is in `sudo`; `sudo vgs` shows `ubuntu-vg` | pass |
+| Root volume uses the whole volume group (`sudo vgs` shows 0 free) | pass on 2026-11-17 (26.95 GB); failed on 2026-11-16 before `sizing-policy: all` |
 | Timezone Europe/Amsterdam, locale en_US.UTF-8, keyboard us | pass |
 | All updates applied (`apt list --upgradable` empty after first boot) | pass |
 | Restart ejects the medium and boots the installed system | pass, after the guest asks to remove the medium and press Enter |
 
-Findings from that run:
+Findings from these runs:
 
-1. The `lvm` layout sized the root volume to half the disk (13.5 of 26.9 GB in the volume group). `sizing-policy: all` was added to the storage layout afterwards and has **not** been re-tested yet.
+1. Without `sizing-policy: all` the `lvm` layout sized the root volume to half the disk (13.5 of 26.9 GB). With it, the 2026-11-17 re-run gave root the full 26.95 GB.
 2. "Ready to install" is always shown when any section is interactive, so a rebuild needs three clicks, not two.
 3. The installer's own log of the run is kept in the installed system under `/var/log/installer/`.
 
