@@ -46,7 +46,7 @@ Only what must exist before first login:
 3. UFW enabled, Ubuntu's security snaps (`prompting-client`, `desktop-security-center`)
 4. `git`, `gh`, `curl`, `wget`, `build-essential` so stage 2 can be fetched and GitHub auth works on first login
 
-Editors, runtimes and GUI apps belong to stage 2. Items still in this file that violate that rule (`nodejs`, `npm`, the `code` snap, `gufw`) are scheduled to move; see PLAN.md §4.1.
+Editors, runtimes and GUI apps belong to stage 2: `nodejs`, `npm`, VS Code and `gufw` are installed by the dotfiles profiles, not here.
 
 ## Files
 
@@ -71,7 +71,7 @@ Last verified run: **2026-11-17** (full re-run on a fresh disk; first run 2026-1
 | cloud-init fetched the file and the installer skipped language, keyboard, layout, storage and app screens | pass |
 | Screens that still asked for input | Internet connection, Create your account, Ready to install |
 | All 13 `packages` entries installed (`dpkg -s`) | pass |
-| Snaps `code`, `prompting-client`, `desktop-security-center` present (`snap list`) | pass |
+| Snaps `prompting-client`, `desktop-security-center` present (`snap list`) | pass |
 | `ufw status` is active (late command) | pass |
 | User is in `sudo`; `sudo vgs` shows `ubuntu-vg` | pass |
 | Root volume uses the whole volume group (`sudo vgs` shows 0 free) | pass on 2026-11-17 (26.95 GB); failed on 2026-11-16 before `sizing-policy: all` |
@@ -88,7 +88,7 @@ Findings from these runs:
 Checklist for the next run, from a terminal in the installed system:
 
 ```bash
-for p in git gh curl wget build-essential ca-certificates gnupg gufw intel-microcode thermald alsa-ucm-conf bolt fwupd-signed nodejs npm; do dpkg -s "$p" >/dev/null 2>&1 && echo "OK $p" || echo "MISSING $p"; done
+for p in git gh curl wget build-essential ca-certificates gnupg intel-microcode thermald alsa-ucm-conf bolt fwupd-signed; do dpkg -s "$p" >/dev/null 2>&1 && echo "OK $p" || echo "MISSING $p"; done
 snap list | awk 'NR>1{print $1}'
 id -nG | tr ' ' '\n' | grep -x sudo
 sudo ufw status | head -1

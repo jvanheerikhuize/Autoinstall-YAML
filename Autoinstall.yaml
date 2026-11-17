@@ -47,7 +47,6 @@ autoinstall:
     - build-essential
     - ca-certificates
     - gnupg
-    - gufw
     # Intel CPU microcode — security and stability for 8th Gen Whiskey Lake
     - intel-microcode
     # Intel thermal daemon — prevents throttling on Dell Latitude 5400
@@ -59,16 +58,9 @@ autoinstall:
     - bolt
     # Signed firmware updates via Dell LVFS — BIOS, EC, dock firmware
     - fwupd-signed
-    # Node.js runtime and npm — Ubuntu 26.04 ships Node 22 LTS, 24.04 ships Node 18
-    - nodejs
-    - npm
 
-  # Developer and security snap packages
+  # Security snap packages (editors and GUI apps belong to stage 2, dotfiles)
   snaps:
-    # Visual Studio Code — primary code editor (classic snap: needs filesystem access)
-    - name: code
-      channel: stable
-      classic: true
     # AppArmor prompting client — handles permission prompts for confined apps
     - name: prompting-client
       channel: stable

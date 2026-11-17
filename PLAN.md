@@ -33,8 +33,8 @@ flowchart TD
 | 3 agentic-workspace | AI CLIs (`claude`, `gemini-cli`, `agy`, `kimi`), `~/.agents`, hooks, directives, systemd user timers, `ollama` and its model list | Anything a non-agent user needs |
 | 4 data | A list of repos to clone, rclone remotes, folders that sync | Anything that is only on this disk |
 
-Rule of thumb: if a package appears in two stages, the lower stage drops it. Today `nodejs`, `npm`
-and the `code` snap are in both stage 1 and stage 2; they move to stage 2 only.
+Rule of thumb: if a package appears in two stages, the lower stage drops it. `nodejs`, `npm`, the `code`
+snap and `gufw` moved to stage 2 on 2026-11-17 (A4).
 
 ---
 
@@ -172,7 +172,7 @@ are repos, synced folders and ollama models.
 | A1 | Run the VirtualBox install from the TinyURL, record the result in the README | gate for everything else |
 | A2 | Add `flatpak` to `packages`, add Flathub remote in `late-commands` (`flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo`) | decision D3 |
 | A3 | Add `gh` to `packages` | stage 0 needs it |
-| A4 | Remove `nodejs`, `npm`, `gufw`, the `code` snap | ownership rule §1 |
+| A4 | Remove `nodejs`, `npm`, `gufw`, the `code` snap | done 2026-11-17 |
 | A5 | Decide LUKS: add `storage` to `interactive-sections` | owner decision |
 | A6 | OpenSCAD and the ESP32 toolchain are stage 2 concerns: OpenSCAD as Flatpak, ESP32 as a dotfiles profile `embedded` | nothing to do here |
 
