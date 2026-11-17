@@ -6,8 +6,8 @@ Short URL for the boot prompt: https://tinyurl.com/jvh-autoinstall
 
 Target release is **Ubuntu 26.04 LTS (Resolute Raccoon)**; 24.04 LTS is the minimum. Reference machine: Dell Latitude 5400.
 
-> [!IMPORTANT]
-> As of 2026-11-16 no install has been verified end to end from this file. Until one is, treat it as untested.
+> [!NOTE]
+> Verified end to end on 2026-11-16 with Ubuntu 26.04.1 Desktop in VirtualBox. See [Verification record](#verification-record).
 
 This is **stage 1** of a three-stage machine rebuild. Stage 2 is [dotfiles](https://github.com/jvanheerikhuize/dotfiles) (apps and configuration), stage 3 is [agentic-workspace](https://github.com/jvanheerikhuize/agentic-workspace) (agent tooling). The split, the decisions, the open work and the rebuild runbook are in [PLAN.md](PLAN.md).
 
@@ -27,11 +27,10 @@ autoinstall cloud-config-url=https://tinyurl.com/jvh-autoinstall
 flowchart TD
     boot["Boot ISO with kernel parameter"] --> fetch["cloud-init fetches Autoinstall.yaml via TinyURL (GitHub raw)"]
     fetch --> net["Network (you act)"]
-    fetch --> id["Identity: hostname + user (you act)"]
-    net --> auto
-    id --> auto
-    auto["Fully automated: minimal desktop, LVM storage, hardware enablement, UFW, drivers + codecs, all updates"]
-    auto --> reboot["Reboot, log in"]
+    net --> id["Identity: hostname + user (you act)"]
+    id --> confirm["Ready to install: click Install (you act)"]
+    confirm --> auto["Fully automated: minimal desktop, LVM storage, hardware enablement, UFW, drivers + codecs, all updates"]
+    auto --> reboot["Restart, eject medium, log in"]
 ```
 
 The file starts with `#cloud-config` and a single top-level `autoinstall:` key. Both are required because the kernel parameter hands the file to cloud-init first, which only accepts payloads that begin with that header.
@@ -59,9 +58,42 @@ Editors, runtimes and GUI apps belong to stage 2. Items still in this file that 
 
 ## Changing the file
 
-Open a pull request. CI checks that the file starts with `#cloud-config` and parses with a single top-level `autoinstall` key. Test in a VM before merging anything that changes what gets installed: boot the Ubuntu Desktop 26.04 LTS ISO in VirtualBox (at least 25 GB disk, 4 GB RAM) with the Quick Deploy kernel parameter, then check that the listed packages and snaps are present, UFW is active, the user has sudo and `sudo vgs` shows an LVM group.
+Open a pull request. CI checks that the file starts with `#cloud-config` and parses with a single top-level `autoinstall` key. Test in a VM before merging anything that changes what gets installed: boot the Ubuntu Desktop 26.04 LTS ISO in VirtualBox (at least 25 GB disk, 4 GB RAM) with the Quick Deploy kernel parameter, then run the checklist from the verification record below and update that record.
 
 To test a local copy instead of the TinyURL, serve the directory over HTTP (the file must still start with `#cloud-config`) and boot with `autoinstall ds=nocloud-net;s=http://<your-ip>/`.
+
+## Verification record
+
+Last verified run: **2026-11-16**, Ubuntu 26.04.1 LTS Desktop ISO, VirtualBox 7.2 (Ubuntu archive build), 4 GB RAM, 30 GB disk, NAT network, file fetched through the TinyURL.
+
+| Check | Result |
+| :--- | :--- |
+| cloud-init fetched the file and the installer skipped language, keyboard, layout, storage and app screens | pass |
+| Screens that still asked for input | Internet connection, Create your account, Ready to install |
+| All 13 `packages` entries installed (`dpkg -s`) | pass |
+| Snaps `code`, `prompting-client`, `desktop-security-center` present (`snap list`) | pass |
+| `ufw status` is active (late command) | pass |
+| User is in `sudo`; `sudo vgs` shows `ubuntu-vg` | pass |
+| Timezone Europe/Amsterdam, locale en_US.UTF-8, keyboard us | pass |
+| All updates applied (`apt list --upgradable` empty after first boot) | pass |
+| Restart ejects the medium and boots the installed system | pass, after the guest asks to remove the medium and press Enter |
+
+Findings from that run:
+
+1. The `lvm` layout sized the root volume to half the disk (13.5 of 26.9 GB in the volume group). `sizing-policy: all` was added to the storage layout afterwards and has **not** been re-tested yet.
+2. "Ready to install" is always shown when any section is interactive, so a rebuild needs three clicks, not two.
+3. The installer's own log of the run is kept in the installed system under `/var/log/installer/`.
+
+Checklist for the next run, from a terminal in the installed system:
+
+```bash
+for p in git curl wget build-essential ca-certificates gnupg gufw intel-microcode thermald alsa-ucm-conf bolt fwupd-signed nodejs npm; do dpkg -s "$p" >/dev/null 2>&1 && echo "OK $p" || echo "MISSING $p"; done
+snap list | awk 'NR>1{print $1}'
+id -nG | tr ' ' '\n' | grep -x sudo
+sudo ufw status | head -1
+sudo vgs; sudo lvs; df -h /
+apt list --upgradable 2>/dev/null
+```
 
 ## References
 
