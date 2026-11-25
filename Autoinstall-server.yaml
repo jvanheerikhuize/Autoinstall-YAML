@@ -1,0 +1,128 @@
+#cloud-config
+# The #cloud-config header is mandatory when this file is delivered
+# through cloud-init (cloud-config-url=, ds=nocloud-net, or a CIDATA volume).
+# Target release: Ubuntu 26.04 LTS Server (Resolute Raccoon); 24.04 LTS remains compatible.
+autoinstall:
+  version: 1
+
+  # Update the installer itself before proceeding
+  refresh-installer:
+    update: true
+    channel: stable/ubuntu-$REL
+
+  # Auto-install OEM kernel if recommended for this hardware
+  oem:
+    install: auto
+
+  # Locale, keyboard, timezone — automated, no prompts
+  locale: en_US.UTF-8
+  keyboard:
+    layout: us
+    variant: ''
+  timezone: Europe/Amsterdam
+
+  # Only network and identity require user input — no secrets stored in repo
+  interactive-sections:
+    - network
+    - identity
+
+  # Headless Ubuntu Server base — zero desktop/GUI footprint (~250 MB idle RAM)
+  source:
+    id: ubuntu-server
+    search_drivers: true
+
+  # Install OpenSSH server; keys for gh:jvanheerikhuize are imported in late-commands
+  ssh:
+    install-server: true
+    allow-pw: true
+    authorized-keys: []
+
+  # Reclaim the entire disk (wipes any prior OS/partitions) into one LVM volume group
+  storage:
+    layout:
+      name: lvm
+      sizing-policy: all
+
+  # Stage 1 server base + Intel hardware enablement
+  packages:
+    - git
+    - gh
+    - curl
+    - wget
+    - build-essential
+    - ca-certificates
+    - gnupg
+    - openssh-server
+    - ssh-import-id
+    - ufw
+    - unattended-upgrades
+    - systemd-zram-generator
+    - pciutils
+    - intel-microcode
+    - thermald
+    - fwupd-signed
+
+  # Pre-seed UFW and unattended security upgrades
+  debconf-selections: |
+    ufw ufw/enable boolean true
+    unattended-upgrades unattended-upgrades/enable_auto_updates boolean true
+
+  # Install third-party hardware drivers (NIC/Wi-Fi firmware); skip desktop media codecs
+  drivers:
+    install: true
+  codecs:
+    install: false
+
+  # Always use the official Ubuntu archive; disable GeoIP mirror selection
+  apt:
+    mirror-selection:
+      primary:
+        - uri: "http://archive.ubuntu.com/ubuntu"
+          arches: [amd64, i386]
+        - uri: "http://ports.ubuntu.com/ubuntu-ports"
+          arches: [s390x, arm64, armhf, powerpc, ppc64el, riscv64]
+    fallback: abort
+    geoip: false
+
+  # Apply all security and general updates before first boot
+  updates: all
+
+  # Configure 4 GB-friendly zram swap, bounded journald logs, Mac mini power-loss auto-boot,
+  # GitHub SSH key import, and UFW (allowing OpenSSH before enabling default-deny inbound).
+  late-commands:
+    - |
+      curtin in-target -- sh -c 'cat >/etc/systemd/zram-generator.conf <<EOF
+      [zram0]
+      zram-size = ram / 2
+      compression-algorithm = zstd
+      swap-priority = 100
+      EOF'
+    - |
+      curtin in-target -- sh -c 'mkdir -p /etc/systemd/journald.conf.d && cat >/etc/systemd/journald.conf.d/server.conf <<EOF
+      [Journal]
+      SystemMaxUse=200M
+      RuntimeMaxUse=32M
+      EOF'
+    - |
+      curtin in-target -- sh -c 'cat >/etc/systemd/system/macmini-autoresume.service <<EOF
+      [Unit]
+      Description=Enable auto power-on after AC power loss on Intel Mac mini (Macmini7,1)
+      ConditionPathExists=/sys/class/dmi/id/product_name
+      After=multi-user.target
+
+      [Service]
+      Type=oneshot
+      ExecStart=/bin/sh -c "grep -qx Macmini7,1 /sys/class/dmi/id/product_name && /usr/bin/setpci -s 00:1f.0 0xa4.b=0 || true"
+      RemainAfterExit=yes
+
+      [Install]
+      WantedBy=multi-user.target
+      EOF
+      systemctl enable macmini-autoresume.service'
+    - |
+      curtin in-target -- sh -c 'U=$(awk -F: "\$3>=1000 && \$3<65534 {print \$1; exit}" /etc/passwd) && [ -n "$U" ] && su - "$U" -c "ssh-import-id-gh jvanheerikhuize" >/var/log/autoinstall-ssh.log 2>&1 || echo "ssh-import-id skipped (offline or unavailable)" >>/var/log/autoinstall-ssh.log'
+    - curtin in-target -- ufw allow OpenSSH
+    - curtin in-target -- ufw --force enable
+
+  # Reboot into the installed server once complete
+  shutdown: reboot
