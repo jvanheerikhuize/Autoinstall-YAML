@@ -1,10 +1,10 @@
 # Autoinstall YAML
 
-One [Ubuntu Autoinstall](https://canonical-subiquity.readthedocs-hosted.com/en/latest/reference/autoinstall-reference.html) file that installs a developer laptop unattended, except for the two things that are per machine: **network** and **identity**. The point is that a fresh machine can be rebuilt from a URL without documentation lookup or manual tweaking.
+Two [Ubuntu Autoinstall](https://canonical-subiquity.readthedocs-hosted.com/en/latest/reference/autoinstall-reference.html) files that install either a developer laptop (`Autoinstall.yaml`) or a headless home/edge server (`Autoinstall-server.yaml`) unattended, except for the two things that are per machine: **network** and **identity**. The point is that a fresh machine can be rebuilt from a URL or `CIDATA` seed without documentation lookup or manual tweaking.
 
-Short URL for the boot prompt: https://tinyurl.com/jvh-autoinstall
+Short URL for the laptop boot prompt: https://tinyurl.com/jvh-autoinstall
 
-Target release is **Ubuntu 26.04 LTS (Resolute Raccoon)**; 24.04 LTS is the minimum. Reference machine: Dell Latitude 5400.
+Target release is **Ubuntu 26.04 LTS (Resolute Raccoon)**; 24.04 LTS is the minimum. Reference machines: Dell Latitude 5400 (laptop) and Apple Mac mini `Macmini7,1` (headless server).
 
 > [!NOTE]
 > Verified end to end on 2026-11-18 with Ubuntu 26.04.1 Desktop in VirtualBox, together with stage 2 (dotfiles). See [Verification record](#verification-record).
@@ -48,11 +48,25 @@ Only what must exist before first login:
 
 Editors, runtimes and GUI apps belong to stage 2: `nodejs`, `npm`, VS Code and `gufw` are installed by the dotfiles profiles, not here.
 
+## Quick Deploy (Headless Server)
+
+1. Boot the `ubuntu-26.04.1-live-server-amd64.iso` USB drive (on Intel Mac mini, hold `Option` at power-on and pick `EFI Boot`).
+2. Press `e` on `Try or Install Ubuntu Server` to edit the GRUB entry.
+3. Append to the `linux` line (either via GitHub raw URL or an attached `CIDATA` volume):
+
+```text
+autoinstall cloud-config-url=https://raw.githubusercontent.com/jvanheerikhuize/Autoinstall-YAML/main/Autoinstall-server.yaml
+```
+
+4. Press `F10` to boot, confirm **Network** (wired Ethernet) and **Identity**, and let the installer wipe the disk into full-size LVM, configure `zram`, import `gh:jvanheerikhuize` SSH keys, allow `OpenSSH` in UFW, and reboot.
+5. After first boot, run Stage 2 (`dotfiles/install.sh --profile server`) and Stage 3 (`agentic-workspace/install.sh`).
+
 ## Files
 
 ```text
-├── Autoinstall.yaml    # The product; served via TinyURL
-├── PLAN.md             # Three-stage rebuild: ownership, decisions, work items, runbook
+├── Autoinstall.yaml          # Laptop Stage 1 (ubuntu-desktop-minimal); served via TinyURL
+├── Autoinstall-server.yaml   # Server Stage 1 (ubuntu-server, zram, OpenSSH + UFW, Macmini7,1 auto-resume)
+├── PLAN.md                   # Three-stage rebuild: ownership, decisions, work items, runbook
 └── .github/workflows/validate-autoinstall.yml   # CI: header and top-level key check
 ```
 
