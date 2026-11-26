@@ -58,6 +58,10 @@ autoinstall:
     - unattended-upgrades
     - systemd-zram-generator
     - pciutils
+    - broadcom-sta-dkms
+    - wpasupplicant
+    - iw
+    - rfkill
     - intel-microcode
     - thermald
     - fwupd-signed
@@ -119,6 +123,37 @@ autoinstall:
       WantedBy=multi-user.target
       EOF
       systemctl enable macmini-autoresume.service'
+    - |
+      curtin in-target -- sh -c 'cat >/etc/modprobe.d/blacklist-broadcom-wireless.conf <<EOF
+      blacklist b43
+      blacklist bcma
+      blacklist ssb
+      blacklist brcmsmac
+      EOF
+      cat >/usr/local/sbin/enable-wifi <<\EOF
+      #!/usr/bin/env bash
+      set -euo pipefail
+      [ "$EUID" -eq 0 ] || { echo "Run with sudo: sudo enable-wifi \"SSID\" \"PASSWORD\"" >&2; exit 1; }
+      [ $# -ge 2 ] || { echo "Usage: sudo enable-wifi \"SSID\" \"PASSWORD\"" >&2; exit 1; }
+      modprobe -r b43 bcma ssb brcmsmac 2>/dev/null || true
+      modprobe wl || true
+      rfkill unblock all || true
+      sleep 1
+      IFACE=$(ip -o link show | awk -F": " "{print \$2}" | grep -E "^wl" | head -n1)
+      [ -n "$IFACE" ] || { echo "No wl* Wi-Fi interface found" >&2; exit 1; }
+      iw dev "$IFACE" set power_save off 2>/dev/null || true
+      python3 - "$IFACE" "$1" "$2" <<\PY
+      import os, sys
+      iface, ssid, pw = sys.argv[1], sys.argv[2], sys.argv[3]
+      q = lambda s: "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"") + "\""
+      p = "/etc/netplan/60-wifi.yaml"
+      open(p, "w").write(f"network:\n  version: 2\n  renderer: networkd\n  wifis:\n    {iface}:\n      dhcp4: true\n      dhcp6: true\n      access-points:\n        {q(ssid)}:\n          password: {q(pw)}\n")
+      os.chmod(p, 0o600)
+      PY
+      netplan generate && netplan apply
+      echo "Wi-Fi configured on $IFACE"
+      EOF
+      chmod 0755 /usr/local/sbin/enable-wifi'
     - |
       curtin in-target -- sh -c 'U=$(awk -F: "\$3>=1000 && \$3<65534 {print \$1; exit}" /etc/passwd) && [ -n "$U" ] && su - "$U" -c "ssh-import-id-gh jvanheerikhuize" >/var/log/autoinstall-ssh.log 2>&1 || echo "ssh-import-id skipped (offline or unavailable)" >>/var/log/autoinstall-ssh.log'
     - curtin in-target -- ufw allow OpenSSH
